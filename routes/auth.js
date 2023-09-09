@@ -5,12 +5,22 @@ const {
   signup,
   signin,
   forgetPassword,
+  signInTokenVerify,
+  sendOTP,
+  verifyOTP,
+  verifyEmail,
 } = require("../controllers/auth");
 
 router.post("/signup", signup);
 
 router.post("/signin", signin);
 
+router.post("/google-signin-verify",signInTokenVerify); 
+
+router.post("/verify-otp",verifyOTP); 
+
+
 router.post("/forget-password", forgetPassword);
+
 
 module.exports = router;
