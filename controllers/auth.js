@@ -82,21 +82,21 @@ exports.signin = (req, res) => {
 
 // verify email
 // this work after signup & signin
-exports.verifyEmail = (req,res) => {
-  firebase
-    .auth()
-    .currentUser.sendEmailVerification()
-    .then(function () {
-      return res.status(200).json({ status: "Email Verification Sent!" });
-    })
-    .catch(function (error) {
-      let errorCode = error.code;
-      let errorMessage = error.message;
-      if (errorCode === "auth/too-many-requests") {
-        return res.status(500).json({ error: errorMessage });
-      }
-    });
-};
+// exports.verifyEmail = (req,res) => {
+//   firebase
+//     .auth()
+//     .currentUser.sendEmailVerification()
+//     .then(function () {
+//       return res.status(200).json({ status: "Email Verification Sent!" });
+//     })
+//     .catch(function (error) {
+//       let errorCode = error.code;
+//       let errorMessage = error.message;
+//       if (errorCode === "auth/too-many-requests") {
+//         return res.status(500).json({ error: errorMessage });
+//       }
+//     });
+// };
 
 
 // Create an API endpoint for sending O
@@ -104,7 +104,6 @@ exports.verifyOTP = (req, res) => {
   const verificationId = req.body.verificationId; // Get the verification ID from the client
   const otpCode = req.body.otpCode; // Get the OTP code entered by the user
 
-  // Use the verification ID and OTP code to verify the phone number
   admin
     .auth()
     .checkActionCode(verificationId)

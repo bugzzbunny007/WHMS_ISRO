@@ -15,7 +15,7 @@ router.post("/signup", signup);
 
 router.post("/signin", signin);
 
-router.post("/google-signin-verify",signInTokenVerify); 
+router.post("/signin-verify",signInTokenVerify); 
 
 router.post("/verify-otp",verifyOTP); 
 
