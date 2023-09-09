@@ -17,12 +17,19 @@ exports.signup = (req, res) => {
   firebase
     .auth()
     .createUserWithEmailAndPassword(req.body.email, req.body.password)
-    .then((data) => {
-      firebase
-      .auth()
-      .currentUser.sendEmailVerification()
-      return res.status(201).json(data);
-    })
+    .then((userCredential) => {
+        // Update the user's display name
+        return userCredential.user.updateProfile({
+          displayName: req.body.displayName,
+        });
+      })
+      .then(() => {
+        // Send email verification
+        return firebase.auth().currentUser.sendEmailVerification();
+      })
+      .then(() => {
+        return res.status(201).json({ message: firebase.auth().currentUser });
+      })
     .catch(function (error) {
       let errorCode = error.code;
       let errorMessage = error.message;
