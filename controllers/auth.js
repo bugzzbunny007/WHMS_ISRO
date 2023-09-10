@@ -1,10 +1,7 @@
-const firebase = require("./../config/firebase");
-var admin = require("firebase-admin");
-var serviceAccount = require("../serviceAccount.json");
-
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
-});
+const firebase = require("../config/firebase");
+const User = require('../models/User')
+const mongoose = require('mongoose');
+const ObjectId = mongoose.Types.ObjectId;
 
 // signup
 exports.signup = (req, res) => {
@@ -18,47 +15,34 @@ exports.signup = (req, res) => {
     .auth()
     .createUserWithEmailAndPassword(req.body.email, req.body.password)
     .then((userCredential) => {
-        // Update the user's display name
-        return userCredential.user.updateProfile({
-          displayName: req.body.displayName,
-        });
-      })
-      .then(() => {
-        // Send email verification
-        return firebase.auth().currentUser.sendEmailVerification();
-      })
-      .then(() => {
-        return res.status(201).json({ message: firebase.auth().currentUser });
-      })
+      // Update the user's display name
+
+      return userCredential.user.updateProfile({
+        displayName: req.body.displayName,
+      });
+    })
+    .then(() => {
+      // Send email verification
+      return firebase.auth().currentUser.sendEmailVerification();
+    })
+    .then(() => {
+      return res.status(201).json({ message: firebase.auth().currentUser });
+    })
     .catch(function (error) {
       let errorCode = error.code;
       let errorMessage = error.message;
+      if (errorCode == 'auth/email-already-in-use') {
+        return res.status(409).json({ error: 'Email already exists. Please Signin.' }); // 409 Conflict
+      }
       if (errorCode == "auth/weak-password") {
-        return res.status(500).json({ error: errorMessage });
+        return res.status(400).json({ error: errorMessage });
       } else {
+        console.log(error)
         return res.status(500).json({ error: errorMessage });
       }
     });
 };
 
-// Define a route for  Sign-In Verification
- exports.signInTokenVerify = (req, res) => {
-  //client auth token will be verified from here authorization bearer token
-  const idToken = req.query.idToken; 
-  // const idToken="ya29.a0AfB_byCgmNjIY63OrLJZxRO9f0YPOGQG5K_WRyTH1p0xnFbTC_2FlB9FRn7zbESSYNziXFCHyoll0w9IAY6O9FqiaAnv20p4YY72E95NNeCHxJTvrw2r1nfQiZ5BXQJm4pMirLwVz5HwjrZD1XJsaHWNkq43D6mOVgaCgYKAXMSARESFQHsvYlseCAyaSfKsaqkHYZDOnr91Q0169"
-  admin
-    .auth()
-    .verifyIdToken(idToken)
-    .then((decodedToken) => {
-      const uid = decodedToken.uid;
-      // You can access the user's UID and other information here
-      res.json({ uid });
-    })
-    .catch((error) => {
-      // Handle sign-in errors
-      res.status(500).json({ error: 'Sign-In failed' });
-    });
-};
 
 // signin
 exports.signin = (req, res) => {
@@ -72,16 +56,29 @@ exports.signin = (req, res) => {
     .auth()
     .signInWithEmailAndPassword(req.body.email, req.body.password)
     .then((user) => {
-      
-      return res.status(200).json(user);
+
+      if (user.user.emailVerified)
+        return res.status(200).json(user);
+      else {
+        return firebase.auth().currentUser.sendEmailVerification().then(() => {
+          return res.status(403).json({
+            error: "Email has not been verified. Please verify your email address to proceed.",
+          });
+        })
+      }
     })
     .catch(function (error) {
-
+      console.error(error)
       let errorCode = error.code;
+      console.log(errorCode)
       let errorMessage = error.message;
       if (errorCode === "auth/wrong-password") {
-        return res.status(500).json({ error: errorMessage });
-      } else {
+        return res.status(401).json({ error: errorMessage });
+      }
+      if (errorCode === "auth/too-many-requests") {
+        return res.status(429).json({ error: errorMessage });
+      }
+      else {
         return res.status(500).json({ error: errorMessage });
       }
     });
@@ -151,4 +148,33 @@ exports.forgetPassword = (req, res) => {
         return res.status(500).json({ error: errorMessage });
       }
     });
+};
+
+// Create Mongo User
+exports.createMongoUser = async (req, res) => {
+  try {
+    console.log("Will Create mongo user");
+
+    // Check if a user with the same authId already exists in MongoDB
+    const existingUser = await User.findOne({ _id: req.user.uid });
+
+    if (existingUser) {
+      return res.status(409).json({ error: "User already exists in MongoDB" });
+    }
+
+    // Create a new user with _id as an ObjectId
+    const newUser = new User({
+      name: req.user.name,
+      email: req.user.email,
+      _id: req.user.uid, // Corrected the constructor
+    });
+
+    // Save the new user to the database
+    await newUser.save();
+
+    return res.status(201).json({ payload: { id: newUser.id } }); // 201 Created
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Failed to create MongoDB user" });
+  }
 };
