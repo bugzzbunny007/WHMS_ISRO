@@ -2,6 +2,7 @@ const firebase = require("../config/firebase");
 const User = require('../models/User')
 const mongoose = require('mongoose');
 const ObjectId = mongoose.Types.ObjectId;
+const bcrypt = require('bcrypt');
 
 // signup
 exports.signup = (req, res) => {
@@ -14,14 +15,39 @@ exports.signup = (req, res) => {
   firebase
     .auth()
     .createUserWithEmailAndPassword(req.body.email, req.body.password)
-    .then((userCredential) => {
+    .then(async (userCredential) => {
       // Update the user's display name
+      console.log("user created mongo stuff started");
+      const existingUser = await User.findOne({ email: req.body.email });
+      if (existingUser) {
+        
+          return res.status(409).json({ error: 'Email already exists. Please login.' }); // 409 Conflict
+      }
+
+      // Encrypt the password
+      // const salt = await bcrypt.genSalt(10);
+      // const hashedPassword = await bcrypt.hash(req.body.password, salt);
+
+      // Create a new user
+      console.log("user uid",userCredential.user.uid);
+      const newUser = new User({
+          _id : userCredential.user.uid,
+          name: req.body.displayName,
+          email: req.body.email,
+          password: req.body.password
+      });
+
+      // Save the new user to the database
+      await newUser.save();
+      
+      console.log("User created in db"+"Welcome"+req.body.displayName)
 
       return userCredential.user.updateProfile({
         displayName: req.body.displayName,
       });
+
     })
-    .then(() => {
+    .then( async () => {
       // Send email verification
       return firebase.auth().currentUser.sendEmailVerification();
     })
