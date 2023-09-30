@@ -11,16 +11,20 @@ const {
   verifyOTP,
   verifyEmail,
   createMongoUser,
+  refresh,
+  createMongoUserEndpoint,
 } = require("../controllers/auth");
 
 router.post("/signup", signup);
 
 router.post("/signin", signin);
 
+router.post("/refresh", refresh);
+
 router.post("/verify-otp", verifyOTP);
 
 router.post("/forget-password", forgetPassword);
 
-router.get("/create-mongo-user", fetchUser, createMongoUser);
+router.post("/create-mongo-user", fetchUser, createMongoUserEndpoint);
 
 module.exports = router;
