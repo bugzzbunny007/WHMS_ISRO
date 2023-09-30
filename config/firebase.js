@@ -3,8 +3,8 @@ require("firebase/auth");
 require("firebase/firestore");
 
 // Add Firebase SDK Snippet
-  // databaseURL: "",
-  // measurementId: "",
+// databaseURL: "",
+// measurementId: "",
 const firebaseConfig = {
   apiKey: "AIzaSyAPpjED3wRoJQ1_RHKHu9rEth7kLPWWTLA",
   authDomain: "whms-auth-7ed4b.firebaseapp.com",

@@ -1,64 +1,61 @@
-const firebase = require("./../config/firebase");
-var admin = require("firebase-admin");
-var serviceAccount = require("../serviceAccount.json");
-
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
-});
+const firebase = require("../config/firebase");
+const User = require('../models/User')
+const mongoose = require('mongoose');
+const ObjectId = mongoose.Types.ObjectId;
+const bcrypt = require('bcrypt');
+const admin = require('firebase-admin');
 
 // signup
-exports.signup = (req, res) => {
-  if (!req.body.email || !req.body.password) {
-    return res.status(422).json({
-      email: "email is required",
-      password: "password is required",
+exports.signup = async (req, res) => {
+  try {
+    if (!req.body.email || !req.body.password) {
+      return res.status(422).json({
+        email: "email is required",
+        password: "password is required",
+      });
+    }
+
+    const userCredential = await firebase
+      .auth()
+      .createUserWithEmailAndPassword(req.body.email, req.body.password);
+
+    console.log("user created mongo stuff started");
+
+    const existingUser = await User.findOne({ email: req.body.email });
+
+    if (existingUser) {
+      return res.status(409).json({ error: 'Email already exists. Please login.' }); // 409 Conflict
+    }
+
+    const createUserResult = await exports.createMongoUser({
+      uid: userCredential.user.uid,
+      displayName: req.body.displayName,
+      email: req.body.email,
     });
+
+    if (createUserResult === 1) {
+      // User created successfully
+      await userCredential.user.updateProfile({
+        displayName: req.body.displayName,
+      });
+
+      // Send email verification
+      await firebase.auth().currentUser.sendEmailVerification();
+
+      return res.status(201).json({ message: 'User Created, please verify email' });
+    } else if (createUserResult === 0) {
+      // User already exists
+      return res.status(409).json({ error: "Email already exists. Please Signin." }); // 409 Conflict
+    } else {
+      // Failed to create user
+      return res.status(500).json({ error: "Failed to create MongoDB user" }); // 500 Internal Server Error
+    }
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Failed to create user" });
   }
-  firebase
-    .auth()
-    .createUserWithEmailAndPassword(req.body.email, req.body.password)
-    .then((userCredential) => {
-        // Update the user's display name
-        return userCredential.user.updateProfile({
-          displayName: req.body.displayName,
-        });
-      })
-      .then(() => {
-        // Send email verification
-        return firebase.auth().currentUser.sendEmailVerification();
-      })
-      .then(() => {
-        return res.status(201).json({ message: firebase.auth().currentUser });
-      })
-    .catch(function (error) {
-      let errorCode = error.code;
-      let errorMessage = error.message;
-      if (errorCode == "auth/weak-password") {
-        return res.status(500).json({ error: errorMessage });
-      } else {
-        return res.status(500).json({ error: errorMessage });
-      }
-    });
 };
 
-// Define a route for  Sign-In Verification
- exports.signInTokenVerify = (req, res) => {
-  //client auth token will be verified from here authorization bearer token
-  const idToken = req.query.idToken; 
-  // const idToken="ya29.a0AfB_byCgmNjIY63OrLJZxRO9f0YPOGQG5K_WRyTH1p0xnFbTC_2FlB9FRn7zbESSYNziXFCHyoll0w9IAY6O9FqiaAnv20p4YY72E95NNeCHxJTvrw2r1nfQiZ5BXQJm4pMirLwVz5HwjrZD1XJsaHWNkq43D6mOVgaCgYKAXMSARESFQHsvYlseCAyaSfKsaqkHYZDOnr91Q0169"
-  admin
-    .auth()
-    .verifyIdToken(idToken)
-    .then((decodedToken) => {
-      const uid = decodedToken.uid;
-      // You can access the user's UID and other information here
-      res.json({ uid });
-    })
-    .catch((error) => {
-      // Handle sign-in errors
-      res.status(500).json({ error: 'Sign-In failed' });
-    });
-};
 
 // signin
 exports.signin = (req, res) => {
@@ -72,20 +69,57 @@ exports.signin = (req, res) => {
     .auth()
     .signInWithEmailAndPassword(req.body.email, req.body.password)
     .then((user) => {
-      
-      return res.status(200).json(user);
+
+      if (user.user.emailVerified)
+        return res.status(200).json(user);
+      else {
+        return firebase.auth().currentUser.sendEmailVerification().then(() => {
+          return res.status(403).json({
+            error: "Email has not been verified. Please verify your email address to proceed.",
+          });
+        })
+      }
     })
     .catch(function (error) {
-
+      console.error(error)
       let errorCode = error.code;
+      console.log(errorCode)
       let errorMessage = error.message;
       if (errorCode === "auth/wrong-password") {
-        return res.status(500).json({ error: errorMessage });
-      } else {
+        return res.status(401).json({ error: errorMessage });
+      }
+      if (errorCode === "auth/too-many-requests") {
+        return res.status(429).json({ error: errorMessage });
+      }
+      else {
         return res.status(500).json({ error: errorMessage });
       }
     });
 };
+
+// refreshToken
+exports.refresh = async (req, res) => {
+  const refreshToken = req.body.refreshToken;
+
+  if (!refreshToken) {
+    return res.status(400).json({ error: 'Refresh token is required' });
+  }
+
+  try {
+    // Verify the refreshToken to get the UID
+    const decodedToken = await admin.auth().verifyIdToken(refreshToken);
+    const uid = decodedToken.uid;
+
+    // Create a new custom token for the user
+    const newToken = await admin.auth().createCustomToken(uid);
+
+    return res.status(200).json({ authToken: newToken });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'Failed to refresh token' });
+  }
+};
+
 
 // verify email
 // this work after signup & signin
@@ -151,4 +185,60 @@ exports.forgetPassword = (req, res) => {
         return res.status(500).json({ error: errorMessage });
       }
     });
+};
+
+// Create Mongo User
+exports.createMongoUserEndpoint = async (req, res) => {
+  try {
+    console.log("Will Create mongo user");
+
+    const createUserResult = await exports.createMongoUser({
+      name: req.body.name,
+      email: req.body.email,
+      _id: req.body.uid,
+    });
+
+    if (createUserResult === 1) {
+      // User created successfully
+      return res.status(201).json({ payload: { id: req.body.uid } }); // 201 Created
+    } else if (createUserResult === 0) {
+      // User already exists
+      return res.status(409).json({ error: "User already exists in MongoDB" }); // 409 Conflict
+    } else {
+      // Failed to create user
+      return res.status(500).json({ error: "Failed to create MongoDB user" }); // 500 Internal Server Error
+    }
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Failed to create MongoDB user" });
+  }
+};
+
+
+
+exports.createMongoUser = async (user) => {
+  try {
+    console.log("Will Create mongo user");
+    console.log(user)
+    console.log(user._id)
+    // Check if a user with the same authId already exists in MongoDB
+    const existingUser = await User.findOne({ _id: user._id });
+
+    if (existingUser) {
+      console.log("User already exists in MongoDB");
+      return 2; // User already exists, return 0 for failure
+    }
+
+    // Create a new user with _id as an ObjectId
+    const newUser = new User(user);
+
+    // Save the new user to the database
+    await newUser.save();
+
+    console.log("MongoDB User created successfully");
+    return 1; // User created successfully, return 1 for success
+  } catch (error) {
+    console.error("Failed to create MongoDB user:", error);
+    return 0; // Failed to create user, return 0 for failure
+  }
 };
