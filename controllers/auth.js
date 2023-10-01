@@ -28,8 +28,8 @@ exports.signup = async (req, res) => {
     }
 
     const createUserResult = await exports.createMongoUser({
-      uid: userCredential.user.uid,
-      displayName: req.body.displayName,
+      _id: userCredential.user.uid,
+      name: req.body.displayName,
       email: req.body.email,
     });
 
@@ -51,7 +51,12 @@ exports.signup = async (req, res) => {
       return res.status(500).json({ error: "Failed to create MongoDB user" }); // 500 Internal Server Error
     }
   } catch (error) {
-    console.error(error);
+    if (error.code === 'auth/email-already-in-use') {
+      return res.status(409).json({ error: "Email already exists. Please Signin." }); // 409 Conflict
+
+    }
+    console.log(error.code);
+
     return res.status(500).json({ error: "Failed to create user" });
   }
 };
@@ -195,12 +200,12 @@ exports.createMongoUserEndpoint = async (req, res) => {
     const createUserResult = await exports.createMongoUser({
       name: req.body.name,
       email: req.body.email,
-      _id: req.body.uid,
+      _id: req.body._id,
     });
 
     if (createUserResult === 1) {
       // User created successfully
-      return res.status(201).json({ payload: { id: req.body.uid } }); // 201 Created
+      return res.status(201).json({ payload: { id: req.body._id } }); // 201 Created
     } else if (createUserResult === 0) {
       // User already exists
       return res.status(409).json({ error: "User already exists in MongoDB" }); // 409 Conflict
