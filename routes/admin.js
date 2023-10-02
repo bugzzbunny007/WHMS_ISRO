@@ -10,6 +10,5 @@ router.post('/add-users', fetchUser, isAdmin, addUserToAdmin);
 
 router.post('/remove-users', fetchUser, isAdmin, removeUserFromAdmin);
 
-//TODO remove user from an admin
 
 module.exports = router;

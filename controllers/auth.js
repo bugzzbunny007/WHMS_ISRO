@@ -92,7 +92,6 @@ exports.signin = (req, res) => {
       if (user.user.emailVerified)
         return res.status(200).json(user);
       else {
-        // TODO can result in 429, take a look
         return firebase.auth().currentUser.sendEmailVerification().then(() => {
           return res.status(403).json({
             error: "Email has not been verified. Please verify your email address to proceed.",
@@ -109,7 +108,9 @@ exports.signin = (req, res) => {
         return res.status(401).json({ error: errorMessage });
       }
       if (errorCode === "auth/too-many-requests") {
-        return res.status(429).json({ error: errorMessage });
+        res.status(403).json({
+          error: "Email has not been verified. Please verify your email address to proceed.",
+        });
       }
       else {
         return res.status(500).json({ error: errorMessage });
