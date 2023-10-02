@@ -24,7 +24,7 @@ const createAdmin = async (req, res) => {
                         if (admin) {
                             console.log('admin exists')
                             // Admin already exists, update the user data
-                            Admin.findOneAndUpdate({ _id: req.body._id }, { _id: req.body._id, maxUserCount: req.body.maxUserCount, userIds: req.body.userIds }, { new: true, upsert: true })
+                            Admin.findOneAndUpdate({ _id: req.body._id }, { _id: req.body._id, maxUserCount: req.body.maxUserCount }, { new: true, upsert: true })
                                 .then((updatedUser) => {
                                     // User updated successfully
                                     console.log('Admin updated:', updatedUser);
