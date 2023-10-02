@@ -7,11 +7,8 @@ const userRoles = ['admin', 'superadmin'];
 //Todo admin should have a list of users whos under it
 const adminSchema = new mongoose.Schema({
     _id: { type: String, required: true },
-    name: { type: String, required: true },
-    email: { type: String, required: true },
-    phone: { type: String, default : "123456789" },
-    role: { type: String, required: true, enum: userRoles },
-    userIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null }] // Reference to User model
+    maxUserCount: { type: Number, default: 10 },
+    userIds: [{ type: String, default: null }] // Reference to User model
 });
 
 // Create the Admin model

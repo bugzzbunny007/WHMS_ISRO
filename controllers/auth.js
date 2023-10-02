@@ -1,5 +1,5 @@
 const firebase = require("../config/firebase");
-const User = require('../models/User')
+const InitialUser = require('../models/InitialUser')
 const mongoose = require('mongoose');
 const ObjectId = mongoose.Types.ObjectId;
 const bcrypt = require('bcrypt');
@@ -15,41 +15,60 @@ exports.signup = async (req, res) => {
       });
     }
 
-    const userCredential = await firebase
+    firebase
       .auth()
-      .createUserWithEmailAndPassword(req.body.email, req.body.password);
+      .createUserWithEmailAndPassword(req.body.email, req.body.password)
+      .then((userCredential) => {
+        return userCredential.user.updateProfile({
+          displayName: req.body.displayName
+        });
+      })
+      .then(() => {
+        // Send email verification
+        return firebase.auth().currentUser.sendEmailVerification();
+      })
+      .then(() => {
+        // Handle the result or additional asynchronous operations here
+        console.log('Firebase user created!')
+        return res.status(201).json({ message: 'User Created, please verify email' });
 
-    console.log("user created mongo stuff started");
+      })
+      .catch((error) => {
+        console.error(error)
+        if (error.code === 'auth/email-already-in-use') {
+          return res.status(409).json({ error: "Email already used, please sign in" });
+        }
+        return res.status(500).json({ error: "Failed to create user" });
 
-    const existingUser = await User.findOne({ email: req.body.email });
-
-    if (existingUser) {
-      return res.status(409).json({ error: 'Email already exists. Please login.' }); // 409 Conflict
-    }
-
-    const createUserResult = await exports.createMongoUser({
-      uid: userCredential.user.uid,
-      displayName: req.body.displayName,
-      email: req.body.email,
-    });
-
-    if (createUserResult === 1) {
-      // User created successfully
-      await userCredential.user.updateProfile({
-        displayName: req.body.displayName,
       });
 
-      // Send email verification
-      await firebase.auth().currentUser.sendEmailVerification();
 
-      return res.status(201).json({ message: 'User Created, please verify email' });
-    } else if (createUserResult === 0) {
-      // User already exists
-      return res.status(409).json({ error: "Email already exists. Please Signin." }); // 409 Conflict
-    } else {
-      // Failed to create user
-      return res.status(500).json({ error: "Failed to create MongoDB user" }); // 500 Internal Server Error
-    }
+
+
+    // const existingUser = await User.findOne({ email: req.body.email });
+    // console.log(existingUser)
+    // if (existingUser) {
+    //   return res.status(409).json({ error: 'Email already exists. Please login.' }); // 409 Conflict
+    // }
+
+    // const createUserResult = await exports.createMongoUser({
+    //   uid: userCredential.user.uid,
+    //   displayName: req.body.displayName,
+    //   email: req.body.email,
+    // });
+
+    // if (createUserResult === 1) {
+    //   // Update user's profile with the 'Roles' field
+    //   await userCredential.user.updateProfile({
+    //     displayName: req.body.displayName,
+    //     // Add the 'Roles' field with the desired value
+    //     roles: [], // You can set a default role if not provided
+    //   });
+
+    // Send email verificationrol
+    // await firebase.auth().currentUser.sendEmailVerification();
+
+
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Failed to create user" });
@@ -73,6 +92,7 @@ exports.signin = (req, res) => {
       if (user.user.emailVerified)
         return res.status(200).json(user);
       else {
+        // TODO can result in 429, take a look
         return firebase.auth().currentUser.sendEmailVerification().then(() => {
           return res.status(403).json({
             error: "Email has not been verified. Please verify your email address to proceed.",
@@ -193,15 +213,15 @@ exports.createMongoUserEndpoint = async (req, res) => {
     console.log("Will Create mongo user");
 
     const createUserResult = await exports.createMongoUser({
-      name: req.body.name,
-      email: req.body.email,
-      _id: req.body.uid,
+      name: req.user.name,
+      email: req.user.email,
+      _id: req.user.uid,
     });
 
     if (createUserResult === 1) {
       // User created successfully
-      return res.status(201).json({ payload: { id: req.body.uid } }); // 201 Created
-    } else if (createUserResult === 0) {
+      return res.status(201).json({ payload: { id: req.user.uid } }); // 201 Created
+    } else if (createUserResult === 2) {
       // User already exists
       return res.status(409).json({ error: "User already exists in MongoDB" }); // 409 Conflict
     } else {
@@ -222,7 +242,7 @@ exports.createMongoUser = async (user) => {
     console.log(user)
     console.log(user._id)
     // Check if a user with the same authId already exists in MongoDB
-    const existingUser = await User.findOne({ _id: user._id });
+    const existingUser = await InitialUser.findOne({ _id: user._id });
 
     if (existingUser) {
       console.log("User already exists in MongoDB");
@@ -230,10 +250,10 @@ exports.createMongoUser = async (user) => {
     }
 
     // Create a new user with _id as an ObjectId
-    const newUser = new User(user);
+    const newInitialUser = new InitialUser(user);
 
     // Save the new user to the database
-    await newUser.save();
+    await newInitialUser.save();
 
     console.log("MongoDB User created successfully");
     return 1; // User created successfully, return 1 for success
