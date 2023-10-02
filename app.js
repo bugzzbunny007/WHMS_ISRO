@@ -18,6 +18,7 @@ const app = express();
 // Routes
 const authRoutes = require("./routes/auth");
 const profileRoutes = require("./routes/profile");
+const adminRoutes = require("./routes/admin")
 
 // Middlewares
 app.use(bodyParser.json());
@@ -32,6 +33,8 @@ app.use(cors({
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRoutes);
+app.use("/api/admin", adminRoutes);
+
 
 // PORT
 const port = 3000;
