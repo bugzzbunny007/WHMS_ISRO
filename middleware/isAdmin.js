@@ -1,24 +1,26 @@
-// Import the Admin model and userRoles
-const Admin = require('../models/admin');
-
+const InitialUser = require('../models/InitialUser')
 // Define the isAdmin middleware
 const isAdmin = async (req, res, next) => {
   try {
-    const userId = req.user._id; // Assuming you have a user object in the request
+    console.log(req.user)
+    InitialUser.findOne({ _id: req.user.uid }).then((data) => {
+      console.log(data)
+      if (data) {
+        if (Array.isArray(data.roles) && (data.roles.includes('admin') || data.roles.includes('superadmin'))) {
+          next();
+        } else {
+          return res.status(401).json({ message: 'UnAuthorized' });
 
-    // Find the admin with the same user ID and role "admin"
-    const admin = await Admin.findOne({ _id: userId, role: 'admin' });
+        }
+      } else {
+        return res.status(401).json({ message: 'UnAuthorized' });
+      }
+    })
+    // return res.status(401).json({ message: 'UnAuthorized' });
 
-    if (!admin) {
-      // If the user is not an admin, return a 403 Forbidden response
-      return res.status(403).json({ message: 'Access denied. User is not an admin.' });
-    }
-
-    // If the user is an admin, you can proceed with the next middleware
-    next();
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Internal server error' });
+    return res.status(401).json({ message: 'Internal Server Error' });
   }
 };
 

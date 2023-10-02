@@ -3,7 +3,7 @@ const { Schema } = mongoose;
 
 // Mongoose Schema for User
 const EnvironmentSchema = new Schema({
-    name: { type: String },
+    name: { type: String, default: "Ground" },
 });
 
 const Environment = mongoose.model('environment', EnvironmentSchema);

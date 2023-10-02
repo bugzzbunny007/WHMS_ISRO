@@ -7,6 +7,8 @@ const { createAdmin } = require("../controllers/superAdmin");
 // Define a POST route to create an admin user
 router.post('/upsertadmin', fetchUser, isSuperAdmin, createAdmin);
 
+// TODO Remove admin privilege
+
 // router.post('/add-users/:adminId', addUserToAdmin);
 
 module.exports = router;
