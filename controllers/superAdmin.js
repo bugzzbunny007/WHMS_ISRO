@@ -91,6 +91,18 @@ const createAdmin = async (req, res) => {
     }
 };
 
+
+const testingFunction = async (req, res) => {
+    try {
+        console.log(req.body)
+        console.log(req.user)
+
+        res.status(200).json({ msg: "OK" })
+    } catch (err) {
+        console.log(err);
+    }
+}
+
 module.exports = {
-    createAdmin
+    createAdmin, testingFunction
 };

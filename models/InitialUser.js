@@ -9,7 +9,7 @@ const InitialUserSchema = new Schema({
     phone: { type: String, default: "1234567890" },
     roles: {
         type: [String],
-        default: ['new'], // Default role(s)
+        default: ['unallocated'], // Default role(s)
     },
 });
 
