@@ -1,6 +1,7 @@
 const InitialUser = require("../models/InitialUser");
-const Admin = require("../models/Admin");
 var mongoose = require('mongoose');
+const User = require("../models/User");
+const Admin = require("../models/Admin");
 const { Types } = mongoose;
 
 const createAdmin = async (req, res) => {
@@ -91,6 +92,55 @@ const createAdmin = async (req, res) => {
     }
 };
 
-module.exports = {
-    createAdmin
-};
+const removeAdmin = async (req, res) => {
+    try {
+
+        if (!req.body._id) {
+            return res.status(422).json({
+                _id: "_id is required"
+            });
+        }
+
+        const adminId = req.body._id;
+      // Find the admin by ID
+
+      
+      const admin = await Admin.findById(adminId);
+      console.log(admin);
+      if (!admin) {
+        return res.status(404).json({ message: 'Admin not found' });
+      }
+  
+      const initialUser = await InitialUser.findById(adminId);
+      
+      if (initialUser) {
+        initialUser.roles = ['new'];
+        await initialUser.save();
+      }
+
+      console.log(initialUser.roles);
+  
+      const userDeletePromises = admin.userIds.map(async (userId) => {
+        const deletedUser = await User.findByIdAndDelete(userId);
+        return deletedUser;
+      });
+  
+      const deletedUsers = await Promise.all(userDeletePromises);
+  
+      // Delete the admin from Admin model
+      await admin.delete();
+  
+      res.status(200).json({
+        message: 'Admin and associated users deleted successfully',
+        deletedUsers,
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Error removing admin and associated users' });
+    }
+  };
+
+        module.exports = {
+            createAdmin,
+            removeAdmin
+        };

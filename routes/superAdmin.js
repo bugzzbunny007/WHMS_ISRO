@@ -2,10 +2,12 @@ const express = require("express");
 const router = express.Router();
 const fetchUser = require("../middleware/fetchuser");
 const isSuperAdmin = require("../middleware/isSuperAdmin");
-const { createAdmin } = require("../controllers/superAdmin");
+const { createAdmin, removeAdmin } = require("../controllers/superAdmin");
 
 // Define a POST route to create an admin user
 router.post('/upsertadmin', fetchUser, isSuperAdmin, createAdmin);
+
+router.post('/removeadmin', fetchUser, isSuperAdmin, removeAdmin);
 
 // TODO Remove admin privilege
 
