@@ -140,7 +140,18 @@ const removeAdmin = async (req, res) => {
     }
   };
 
-        module.exports = {
-            createAdmin,
-            removeAdmin
-        };
+
+const testingFunction = async (req, res) => {
+    try {
+        console.log(req.body)
+        console.log(req.user)
+
+        res.status(200).json({ msg: "OK" })
+    } catch (err) {
+        console.log(err);
+    }
+}
+
+module.exports = {
+    createAdmin, testingFunction,removeAdmin
+};
