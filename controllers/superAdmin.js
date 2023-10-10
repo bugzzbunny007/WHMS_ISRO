@@ -107,6 +107,7 @@ const removeAdmin = async (req, res) => {
       
       const admin = await Admin.findById(adminId);
       console.log(admin);
+      admin.delete();
       if (!admin) {
         return res.status(404).json({ message: 'Admin not found' });
       }
@@ -128,7 +129,7 @@ const removeAdmin = async (req, res) => {
       const deletedUsers = await Promise.all(userDeletePromises);
   
       // Delete the admin from Admin model
-      await admin.delete();
+    //   await admin.delete();
   
       res.status(200).json({
         message: 'Admin and associated users deleted successfully',
@@ -152,6 +153,16 @@ const testingFunction = async (req, res) => {
     }
 }
 
+const fetchAllUsers = async (req, res) => {
+    try {
+        const users = await InitialUser.find(); // Retrieve all users
+        res.status(200).json(users);
+    } catch (error) {
+        console.error(error);
+    res.status(500).json({ message: 'Error fetching users' });
+    }
+}
+
 module.exports = {
-    createAdmin, testingFunction,removeAdmin
+    createAdmin, testingFunction, removeAdmin, fetchAllUsers
 };
