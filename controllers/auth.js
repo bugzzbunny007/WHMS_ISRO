@@ -75,9 +75,8 @@ exports.signup = async (req, res) => {
   }
 };
 
-
 // signin
-exports.signin = (req, res) => {
+exports.signin = (req, res)  => {
   if (!req.body.email || !req.body.password) {
     return res.status(422).json({
       email: "email is required",
@@ -87,10 +86,12 @@ exports.signin = (req, res) => {
   firebase
     .auth()
     .signInWithEmailAndPassword(req.body.email, req.body.password)
-    .then((user) => {
-
-      if (user.user.emailVerified)
-        return res.status(200).json(user);
+    .then(async (user) => {
+      
+      if (user.user.emailVerified){
+        var customToken = await admin.auth().createCustomToken(user.user.uid)
+        return res.status(200).json(customToken);
+      }
       else {
         return firebase.auth().currentUser.sendEmailVerification().then(() => {
           return res.status(403).json({
