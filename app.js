@@ -20,6 +20,9 @@ const authRoutes = require("./routes/auth");
 const profileRoutes = require("./routes/profile");
 const adminRoutes = require("./routes/admin")
 const superAdminRoutes = require("./routes/superAdmin")
+const environmentRoutes = require("./routes/environment");
+
+
 
 // Middlewares
 app.use(bodyParser.json());
@@ -36,6 +39,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/superadmin", superAdminRoutes);
+app.use("/api/environment", environmentRoutes);
+
 
 // PORT
 const port = 3000;
