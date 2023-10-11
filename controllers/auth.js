@@ -4,7 +4,12 @@ const mongoose = require('mongoose');
 const ObjectId = mongoose.Types.ObjectId;
 const bcrypt = require('bcrypt');
 const admin = require('firebase-admin');
+const logger = require('./logger');
 
+
+
+const today = new Date();
+const formattedDate = today.toISOString().split('T')[0];
 // signup
 exports.signup = async (req, res) => {
   try {
@@ -19,27 +24,33 @@ exports.signup = async (req, res) => {
       .auth()
       .createUserWithEmailAndPassword(req.body.email, req.body.password)
       .then((userCredential) => {
+        logger.logToCloudWatch(formattedDate.toString(),`User singup successfully ${req.body.email}`);
         return userCredential.user.updateProfile({
           displayName: req.body.displayName
         });
       })
       .then(() => {
         // Send email verification
+
         return firebase.auth().currentUser.sendEmailVerification();
       })
       .then(() => {
         // Handle the result or additional asynchronous operations here
         console.log('Firebase user created!')
+        logger.logToCloudWatch(formattedDate.toString(),`User Created`);
+
         return res.status(201).json({ message: 'User Created, please verify email' });
 
       })
       .catch((error) => {
         console.error(error)
         if (error.code === 'auth/email-already-in-use') {
+        logger.logToCloudWatch(formattedDate.toString(),`Email already Used ${error}`);
           return res.status(409).json({ error: "Email already used, please sign in" });
         }
+        logger.logToCloudWatch(formattedDate.toString(),`Failed to create user`);
         return res.status(500).json({ error: "Failed to create user" });
-
+      
       });
 
 
@@ -88,12 +99,14 @@ exports.signin = (req, res)  => {
     .signInWithEmailAndPassword(req.body.email, req.body.password)
     .then(async (user) => {
       
+      
       if (user.user.emailVerified){
         var customToken = await admin.auth().createCustomToken(user.user.uid)
         return res.status(200).json(customToken);
       }
       else {
         return firebase.auth().currentUser.sendEmailVerification().then(() => {
+          logger.logToCloudWatch(formattedDate.toString(),`Sign in failed due to email is not verified ${req.body.email}`);
           return res.status(403).json({
             error: "Email has not been verified. Please verify your email address to proceed.",
           });
@@ -105,7 +118,11 @@ exports.signin = (req, res)  => {
       let errorCode = error.code;
       console.log(errorCode)
       let errorMessage = error.message;
+
       if (errorCode === "auth/wrong-password") {
+       
+        logger.logToCloudWatch(formattedDate.toString(),` ${errorMessage}`);
+        
         return res.status(401).json({ error: errorMessage });
       }
       if (errorCode === "auth/too-many-requests") {
@@ -134,10 +151,12 @@ exports.refresh = async (req, res) => {
 
     // Create a new custom token for the user
     const newToken = await admin.auth().createCustomToken(uid);
+    logger.logToCloudWatch(formattedDate.toString(),`New auth token generated sucessfully`);
 
     return res.status(200).json({ authToken: newToken });
   } catch (error) {
     console.error(error);
+    logger.logToCloudWatch(formattedDate.toString(),` ${error}`);
     return res.status(500).json({ error: 'Failed to refresh token' });
   }
 };
@@ -173,14 +192,20 @@ exports.verifyOTP = (req, res) => {
     .then((info) => {
       if (info.data.phoneInfo.verificationCode === otpCode) {
         // OTP code is valid, you can proceed with user authentication or other actions
+        logger.logToCloudWatch(formattedDate.toString(),`OTP verified successfully`);
+        
         res.status(200).json({ message: 'OTP verified successfully' });
       } else {
         // Invalid OTP code
+        logger.logToCloudWatch(formattedDate.toString(),`Invalid OTP Code`);
+
         res.status(400).json({ error: 'Invalid OTP code' });
       }
     })
     .catch((error) => {
       // Handle errors, such as verification ID expiration
+      logger.logToCloudWatch(formattedDate.toString(),`${error.message}`);
+      
       res.status(400).json({ error: error.message });
     });
 };

@@ -3,7 +3,8 @@ const User = require('../models/User');
 const Profile = require('../models/Profile');
 const fetchUser = require("../middleware/fetchuser");
 
-
+const today = new Date();
+const formattedDate = today.toISOString().split('T')[0];
 // updateProfile
 exports.updateProfile = async (req, res) => {
     const { authId, age, weight, gender, height } = req.body;
@@ -19,6 +20,7 @@ exports.updateProfile = async (req, res) => {
     }).catch(function (error) {
         // let errorCode = error.code;
         let errorMessage = error.message;
+        logger.logToCloudWatch(formattedDate.toString(),`${errorMessage}`);
 
         console.log(errorMessage)
 
