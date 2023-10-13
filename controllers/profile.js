@@ -51,12 +51,12 @@ exports.getProfile = async (req, res) => {
     }).catch(function (error) {
         // let errorCode = error.code;
         let errorMessage = error.message;
-        logger.logToCloudWatch(formattedDate.toString(),`${errorMessage}`);
+        logger.logToCloudWatch(formattedDate.toString(), `${errorMessage}`);
 
         console.log(errorMessage)
 
-    //     console.log(errorMessage)
-    // })
+        //     console.log(errorMessage)
+    })
     const ProfileData = await Profile.findOne({ _id: req.user.user_id }).then((data) => {
         if (data) {
             return res.status(200).json(data)
