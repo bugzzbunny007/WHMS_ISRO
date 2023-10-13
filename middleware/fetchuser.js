@@ -2,6 +2,10 @@
 
 const admin = require("firebase-admin");
 
+
+const today = new Date();
+const formattedDate = today.toISOString().split('T')[0];
+
 // Middleware to fetch the user from Firebase
 const fetchUser = (req, res, next) => {
     // Get the user's ID token from the request headers or wherever it's stored
@@ -20,6 +24,7 @@ const fetchUser = (req, res, next) => {
         })
         .catch((error) => {
             console.error(error)
+            logger.logToCloudWatch(formattedDate.toString(),`Issue in fetchuser: ${error}`);
             return res.status(401).json({ error: "Unauthorized" });
         });
 };

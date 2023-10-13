@@ -3,7 +3,8 @@ const { Schema } = mongoose;
 
 // Mongoose Schema for User
 const EnvironmentSchema = new Schema({
-    name: { type: String },
+    _id: { type: String, required: true },
+    name: { type: String, required: true },
 });
 
 const Environment = mongoose.model('environment', EnvironmentSchema);
