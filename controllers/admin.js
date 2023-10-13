@@ -4,6 +4,8 @@ const InitialUser = require("../models/InitialUser");
 var mongoose = require('mongoose');
 const { Types } = mongoose;
 
+const today = new Date();
+const formattedDate = today.toISOString().split('T')[0];
 const addUserToAdmin = async (req, res) => {
   try {
     const { adminId, userIds } = req.body;
@@ -12,6 +14,8 @@ const addUserToAdmin = async (req, res) => {
     const admin = await Admin.findById(adminId);
 
     if (!admin) {
+    logger.logToCloudWatch(formattedDate.toString(),`Admin not found`);
+
       return res.status(404).json({ message: 'Admin not found' });
     }
 
@@ -52,6 +56,7 @@ const addUserToAdmin = async (req, res) => {
 
     res.status(200).json(result);
   } catch (error) {
+    logger.logToCloudWatch(formattedDate.toString(),`${error.message}`);
     console.error(error);
     res.status(500).json({ message: 'Error adding user IDs to admin' });
   }
@@ -65,6 +70,8 @@ const removeUserFromAdmin = async (req, res) => {
     const admin = await Admin.findById(adminId);
 
     if (!admin) {
+    logger.logToCloudWatch(formattedDate.toString(),`Admin not found`);
+
       return res.status(404).json({ message: 'Admin not found' });
     }
 
@@ -112,6 +119,8 @@ const removeUserFromAdmin = async (req, res) => {
     res.status(200).json(result);
   } catch (error) {
     console.error(error);
+    logger.logToCloudWatch(formattedDate.toString(),`Error removing users from admin`);
+
     res.status(500).json({ message: 'Error removing users from admin' });
   }
 };
