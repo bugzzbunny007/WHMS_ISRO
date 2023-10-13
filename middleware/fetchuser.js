@@ -9,9 +9,7 @@ const formattedDate = today.toISOString().split('T')[0];
 // Middleware to fetch the user from Firebase
 const fetchUser = (req, res, next) => {
     // Get the user's ID token from the request headers or wherever it's stored
-
     const idToken = req.get('Authorization');
-
     if (!idToken) {
         return res.status(401).json({ error: "Unauthorized" });
     }

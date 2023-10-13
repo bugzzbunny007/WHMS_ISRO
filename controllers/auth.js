@@ -81,7 +81,12 @@ exports.signup = async (req, res) => {
 
 
   } catch (error) {
-    console.error(error);
+    if (error.code === 'auth/email-already-in-use') {
+      return res.status(409).json({ error: "Email already exists. Please Signin." }); // 409 Conflict
+
+    }
+    console.log(error.code);
+
     return res.status(500).json({ error: "Failed to create user" });
   }
 };

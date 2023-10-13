@@ -6,9 +6,12 @@ const fetchUser = require("../middleware/fetchuser");
 const {
     updateProfile,
     getUser,
+    getProfile
 } = require("../controllers/profile");
 
 router.post("/update-profile", fetchUser, updateProfile);
+
+router.get("/get-profile", fetchUser, getProfile);
 
 //READ
 router.get("/getUser", fetchUser, (req, res) => {

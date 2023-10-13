@@ -23,7 +23,7 @@ router.post("/refresh", refresh);
 
 router.post("/verify-otp", verifyOTP);
 
-router.post("/forget-password", forgetPassword);
+router.post("/forget-password", fetchUser, forgetPassword);
 
 router.post("/create-mongo-user", fetchUser, createMongoUserEndpoint);
 
