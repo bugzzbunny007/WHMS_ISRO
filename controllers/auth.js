@@ -89,8 +89,8 @@ exports.signin = (req, res)  => {
     .then(async (user) => {
       
       if (user.user.emailVerified){
-        var customToken = await admin.auth().createCustomToken(user.user.uid)
-        return res.status(200).json(customToken);
+        // var customToken = await admin.auth().createCustomToken(user.user.uid)
+        return res.status(200).json(user);
       }
       else {
         return firebase.auth().currentUser.sendEmailVerification().then(() => {
