@@ -1,22 +1,25 @@
 const firebase = require("../config/firebase");
 const User = require('../models/User');
-const Profile = require('../models/Profile');
+const Environment = require('../models/Environment');
 const fetchUser = require("../middleware/fetchuser");
 
 const today = new Date();
 const formattedDate = today.toISOString().split('T')[0];
 // updateProfile
-exports.updateProfile = async (req, res) => {
-    const { authId, age, weight, gender, height } = req.body;
+exports.updateEnvironment = async (req, res) => {
+    const { environment, _id } = req.body;
 
     // Use the upsert option to either update or insert the profile
-    Profile.updateOne(
-        { _id: authId }, // Find the profile with the specified _id
-        { age, weight, gender, height }, // Update the profile with the new data
-        { upsert: true } // Create a new profile if it doesn't exist
+    Environment.updateOne(
+        
+            {_id: _id}, // Find the profile with the specified _id
+            {name: environment},
+            { upsert: true } // Create a new profile if it doesn't exist
+
+         // Find the profile with the specified _id
     ).then((User) => {
         console.log(User);
-        return res.status(200).json({ message: "Profile updated" })
+        return res.status(200).json({ message: "Environment updated" })
     }).catch(function (error) {
         // let errorCode = error.code;
         let errorMessage = error.message;
