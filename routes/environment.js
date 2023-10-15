@@ -4,9 +4,10 @@ const fetchUser = require("../middleware/fetchuser");
 
 
 const {
-    updateEnvironment,
+    updateEnvironment,fetchEnvironment
 } = require("../controllers/environment");
 
 router.post("/update-env", fetchUser, updateEnvironment);
+router.get("/get-env", fetchUser,fetchEnvironment);
 
 module.exports = router;

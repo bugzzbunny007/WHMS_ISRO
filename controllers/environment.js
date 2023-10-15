@@ -29,3 +29,16 @@ exports.updateEnvironment = async (req, res) => {
 
     })
 };
+
+exports.fetchEnvironment = async (req,res) => {
+    const env = await Environment.findOne({ _id: req.user.user_id }).then((data) => {
+        if (data) {
+            return res.status(200).json(data)
+        }
+        else {
+            return res.status(404).json({ message: "Env Not Found" })
+        }
+    }).catch((err) => {
+        return res.status(500).json(err)
+    });
+}
