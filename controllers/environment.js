@@ -2,6 +2,7 @@ const firebase = require("../config/firebase");
 const User = require('../models/User');
 const Environment = require('../models/Environment');
 const fetchUser = require("../middleware/fetchuser");
+const logger = require('./logger');
 
 const today = new Date();
 const formattedDate = today.toISOString().split('T')[0];

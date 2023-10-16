@@ -1,6 +1,7 @@
 // middleware/fetchuser.js
 
 const admin = require("firebase-admin");
+const logger = require('../controllers/logger');
 
 
 const today = new Date();
