@@ -57,7 +57,7 @@ exports.getProfile = async (req, res) => {
 
     //     //     console.log(errorMessage)
     // })
-    const ProfileData = await Profile.findOne({ _id: req.user.user_id }).then((data) => {
+    await Profile.findOne({ _id: req.user.user_id }).then((data) => {
         if (data) {
             return res.status(200).json(data)
         }
