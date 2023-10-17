@@ -7,7 +7,6 @@ const admin = require('firebase-admin');
 const logger = require('./logger');
 
 
-
 const today = new Date();
 const formattedDate = today.toISOString().split('T')[0];
 // signup
