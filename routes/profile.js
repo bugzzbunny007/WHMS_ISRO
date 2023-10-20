@@ -14,5 +14,4 @@ router.post("/update-profile", fetchUser, updateProfile);
 router.get("/get-profile", fetchUser, getProfile);
 
 
-
 module.exports = router;

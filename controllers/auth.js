@@ -241,12 +241,14 @@ exports.forgetPassword = (req, res) => {
 // Create Mongo User
 exports.createMongoUserEndpoint = async (req, res) => {
   try {
-    console.log("Will Create mongo user");
-
+    console.log("Will Create mongo user bunny");
+    console.log("annny",req);
     const createUserResult = await exports.createMongoUser({
-      name: req.user.name,
+      name: req.body.name, //firebase does not responde with displayName so used body
       email: req.user.email,
       _id: req.user.uid,
+      profile_exist: false,
+      env_exist: false
     });
 
     if (createUserResult === 1) {
@@ -269,8 +271,9 @@ exports.createMongoUserEndpoint = async (req, res) => {
 
 exports.createMongoUser = async (user) => {
   try {
+    
     console.log("Will Create mongo user");
-    console.log(user)
+    console.log("bunny",user)
     console.log(user._id)
     // Check if a user with the same authId already exists in MongoDB
     const existingUser = await InitialUser.findOne({ _id: user._id });
