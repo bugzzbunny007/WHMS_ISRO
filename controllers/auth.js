@@ -242,7 +242,7 @@ exports.forgetPassword = (req, res) => {
 exports.createMongoUserEndpoint = async (req, res) => {
   try {
     console.log("Will Create mongo user bunny");
-    console.log("annny",req);
+    
     const createUserResult = await exports.createMongoUser({
       name: req.body.name, //firebase does not responde with displayName so used body
       email: req.user.email,
