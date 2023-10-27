@@ -3,8 +3,12 @@
   "version": "1.0.0",
   "description": "firebase auth api",
   "main": "app.js",
+  "engines": {
+    "node": "18.x"
+  },
   "scripts": {
     "start": "node app.js",
+    "test": "echo \"Error: no test specific\" && exit 1",
     "dev": "nodemon app.js"
   },
   "author": "ns",

@@ -1,4 +1,6 @@
 const InitialUser = require('../models/InitialUser')
+const logger = require('../controllers/logger');
+
 // Define the isAdmin middleware
 const isAdmin = async (req, res, next) => {
   try {

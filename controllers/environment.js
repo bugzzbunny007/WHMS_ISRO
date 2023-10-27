@@ -2,6 +2,7 @@ const firebase = require("../config/firebase");
 const User = require('../models/User');
 const Environment = require('../models/Environment');
 const fetchUser = require("../middleware/fetchuser");
+const logger = require('./logger');
 
 const today = new Date();
 const formattedDate = today.toISOString().split('T')[0];
@@ -29,3 +30,16 @@ exports.updateEnvironment = async (req, res) => {
 
     })
 };
+
+exports.fetchEnvironment = async (req,res) => {
+    const env = await Environment.findOne({ _id: req.user.user_id }).then((data) => {
+        if (data) {
+            return res.status(200).json(data)
+        }
+        else {
+            return res.status(404).json({ message: "Env Not Found" })
+        }
+    }).catch((err) => {
+        return res.status(500).json(err)
+    });
+}

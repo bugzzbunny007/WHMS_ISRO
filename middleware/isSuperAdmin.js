@@ -1,4 +1,6 @@
 const InitialUser = require('../models/InitialUser')
+const logger = require('../controllers/logger');
+
 // Define the isSuperAdmin middleware
 const isSuperAdmin = async (req, res, next) => {
     try {

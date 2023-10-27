@@ -3,6 +3,7 @@ const User = require("../models/User");
 const InitialUser = require("../models/InitialUser");
 var mongoose = require('mongoose');
 const { Types } = mongoose;
+const logger = require('./logger');
 
 const today = new Date();
 const formattedDate = today.toISOString().split('T')[0];
