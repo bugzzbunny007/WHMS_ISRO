@@ -41,6 +41,10 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/superadmin", superAdminRoutes);
 app.use("/api/environment", environmentRoutes);
 
+app.get("/", (req, res) => {
+  res.send("Hello World");
+});
+
 
 // PORT
 const port = 3000;
