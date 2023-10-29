@@ -1,11 +1,14 @@
 const firebase = require("../config/firebase");
 const InitialUser = require('../models/InitialUser')
+const Profile = require('../models/Profile')
+const Admin = require('../models/Admin')
+const User = require('../models/User')
+const Environment = require('../models/Environment')
 const mongoose = require('mongoose');
 const ObjectId = mongoose.Types.ObjectId;
 const bcrypt = require('bcrypt');
 const admin = require('firebase-admin');
 const logger = require('./logger');
-
 
 const today = new Date();
 const formattedDate = today.toISOString().split('T')[0];
@@ -23,7 +26,7 @@ exports.signup = async (req, res) => {
       .auth()
       .createUserWithEmailAndPassword(req.body.email, req.body.password)
       .then((userCredential) => {
-        logger.logToCloudWatch(formattedDate.toString(),`User singup successfully ${req.body.email}`);
+        logger.logToCloudWatch(formattedDate.toString(), `User singup successfully ${req.body.email}`);
         return userCredential.user.updateProfile({
           displayName: req.body.displayName
         });
@@ -36,7 +39,7 @@ exports.signup = async (req, res) => {
       .then(() => {
         // Handle the result or additional asynchronous operations here
         console.log('Firebase user created!')
-        logger.logToCloudWatch(formattedDate.toString(),`User Created`);
+        logger.logToCloudWatch(formattedDate.toString(), `User Created`);
 
         return res.status(201).json({ message: 'User Created, please verify email' });
 
@@ -44,12 +47,12 @@ exports.signup = async (req, res) => {
       .catch((error) => {
         console.error(error)
         if (error.code === 'auth/email-already-in-use') {
-        logger.logToCloudWatch(formattedDate.toString(),`Email already Used ${error}`);
+          logger.logToCloudWatch(formattedDate.toString(), `Email already Used ${error}`);
           return res.status(409).json({ error: "Email already used, please sign in" });
         }
-        logger.logToCloudWatch(formattedDate.toString(),`Failed to create user`);
+        logger.logToCloudWatch(formattedDate.toString(), `Failed to create user`);
         return res.status(500).json({ error: "Failed to create user" });
-      
+
       });
 
 
@@ -91,7 +94,7 @@ exports.signup = async (req, res) => {
 };
 
 // signin
-exports.signin = (req, res)  => {
+exports.signin = (req, res) => {
   if (!req.body.email || !req.body.password) {
     return res.status(422).json({
       email: "email is required",
@@ -102,15 +105,15 @@ exports.signin = (req, res)  => {
     .auth()
     .signInWithEmailAndPassword(req.body.email, req.body.password)
     .then(async (user) => {
-      
-      
-      if (user.user.emailVerified){
+
+
+      if (user.user.emailVerified) {
         // var customToken = await admin.auth().createCustomToken(user.user.uid)
         return res.status(200).json(user);
       }
       else {
         return firebase.auth().currentUser.sendEmailVerification().then(() => {
-          logger.logToCloudWatch(formattedDate.toString(),`Sign in failed due to email is not verified ${req.body.email}`);
+          logger.logToCloudWatch(formattedDate.toString(), `Sign in failed due to email is not verified ${req.body.email}`);
           return res.status(403).json({
             error: "Email has not been verified. Please verify your email address to proceed.",
           });
@@ -124,9 +127,9 @@ exports.signin = (req, res)  => {
       let errorMessage = error.message;
 
       if (errorCode === "auth/wrong-password") {
-       
-        logger.logToCloudWatch(formattedDate.toString(),` ${errorMessage}`);
-        
+
+        logger.logToCloudWatch(formattedDate.toString(), ` ${errorMessage}`);
+
         return res.status(401).json({ error: errorMessage });
       }
       if (errorCode === "auth/too-many-requests") {
@@ -155,12 +158,12 @@ exports.refresh = async (req, res) => {
 
     // Create a new custom token for the user
     const newToken = await admin.auth().createCustomToken(uid);
-    logger.logToCloudWatch(formattedDate.toString(),`New auth token generated sucessfully`);
+    logger.logToCloudWatch(formattedDate.toString(), `New auth token generated sucessfully`);
 
     return res.status(200).json({ authToken: newToken });
   } catch (error) {
     console.error(error);
-    logger.logToCloudWatch(formattedDate.toString(),` ${error}`);
+    logger.logToCloudWatch(formattedDate.toString(), ` ${error}`);
     return res.status(500).json({ error: 'Failed to refresh token' });
   }
 };
@@ -196,20 +199,20 @@ exports.verifyOTP = (req, res) => {
     .then((info) => {
       if (info.data.phoneInfo.verificationCode === otpCode) {
         // OTP code is valid, you can proceed with user authentication or other actions
-        logger.logToCloudWatch(formattedDate.toString(),`OTP verified successfully`);
-        
+        logger.logToCloudWatch(formattedDate.toString(), `OTP verified successfully`);
+
         res.status(200).json({ message: 'OTP verified successfully' });
       } else {
         // Invalid OTP code
-        logger.logToCloudWatch(formattedDate.toString(),`Invalid OTP Code`);
+        logger.logToCloudWatch(formattedDate.toString(), `Invalid OTP Code`);
 
         res.status(400).json({ error: 'Invalid OTP code' });
       }
     })
     .catch((error) => {
       // Handle errors, such as verification ID expiration
-      logger.logToCloudWatch(formattedDate.toString(),`${error.message}`);
-      
+      logger.logToCloudWatch(formattedDate.toString(), `${error.message}`);
+
       res.status(400).json({ error: error.message });
     });
 };
@@ -242,7 +245,7 @@ exports.forgetPassword = (req, res) => {
 exports.createMongoUserEndpoint = async (req, res) => {
   try {
     console.log("Will Create mongo user bunny");
-    
+
     const createUserResult = await exports.createMongoUser({
       name: req.body.name, //firebase does not responde with displayName so used body
       email: req.user.email,
@@ -271,9 +274,9 @@ exports.createMongoUserEndpoint = async (req, res) => {
 
 exports.createMongoUser = async (user) => {
   try {
-    
+
     console.log("Will Create mongo user");
-    console.log("bunny",user)
+    console.log("bunny", user)
     console.log(user._id)
     // Check if a user with the same authId already exists in MongoDB
     const existingUser = await InitialUser.findOne({ _id: user._id });
@@ -294,5 +297,48 @@ exports.createMongoUser = async (user) => {
   } catch (error) {
     console.error("Failed to create MongoDB user:", error);
     return 0; // Failed to create user, return 0 for failure
+  }
+};
+
+// Get Mongo User
+exports.getMongoUser = async (req, res) => {
+  try {
+    const userId = req.user.user_id;
+    const userData = {};
+
+    // Search for the user in InitialUser schema
+    const initialUser = await InitialUser.findOne({ _id: userId }).exec();
+    if (initialUser) {
+      userData.InitialUserSchema = initialUser;
+    }
+
+    // Search for the user in Profile schema
+    const profile = await Profile.findOne({ _id: userId }).exec();
+    if (profile) {
+      userData.ProfileSchema = profile;
+    }
+
+    const admin = await Admin.findOne({ _id: userId }).exec();
+    if (admin) {
+      userData.AdminSchema = admin;
+    }
+
+    const user = await User.findOne({ _id: userId }).exec();
+    if (user) {
+      userData.UserSchema = user;
+    }
+
+    const environment = await Environment.findOne({ _id: userId }).exec();
+    if (environment) {
+      userData.EnvironmentSchema = environment;
+    }
+
+    // Search in other schemas and add data to userData as needed...
+
+    // Return the collected data in a JSON format
+    return res.status(200).json(userData);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Failed to get MongoDB user" });
   }
 };
