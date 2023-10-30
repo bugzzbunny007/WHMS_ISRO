@@ -27,4 +27,6 @@ router.post("/forget-password", fetchUser, forgetPassword);
 
 router.post("/create-mongo-user", fetchUser, createMongoUserEndpoint);
 
+
+// router.get("findUserByEmail")
 module.exports = router;
