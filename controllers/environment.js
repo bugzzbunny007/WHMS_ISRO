@@ -7,37 +7,34 @@ const logger = require('./logger');
 
 const today = new Date();
 const formattedDate = today.toISOString().split('T')[0];
-// updateProfile
+
 exports.updateEnvironment = async (req, res) => {
-    const { environment, authId } = req.body;
-    // Use the upsert option to either update or insert the profile
-    Environment.updateOne(
+    const { environment } = req.body;
 
-        { _id: authId }, // Find the profile with the specified _id
-        { name: environment },
-        { upsert: true } // Create a new profile if it doesn't exist
+    try {
+        // Update the Environment
+        await Environment.updateOne(
+            { _id: req.user.uid }, // Find the Environment with the specified _id
+            { name: environment },
+            { upsert: true } // Create a new Environment if it doesn't exist
+        );
 
-        // Find the profile with the specified _id
-    ).then(async (User) => {
-        console.log(User);
+        // Update env_exist to true in InitialUser schema
         await InitialUser.findOneAndUpdate(
-            { _id: authId },
+            { _id: req.user.uid },
             { $set: { env_exist: true } },
             { upsert: true }
-        ).exec().then(() => {
-            return res.status(200).json({ message: "Environment updated" })
-        });
+        ).exec();
 
-
-    }).catch(function (error) {
-        // let errorCode = error.code;
+        return res.status(200).json({ message: "Environment updated" });
+    } catch (error) {
         let errorMessage = error.message;
         logger.logToCloudWatch(formattedDate.toString(), `${errorMessage}`);
-
-        console.log(errorMessage)
-        return res.status(500).json({ message: "Internal Server Error" })
-    })
+        console.log(errorMessage);
+        return res.status(500).json({ message: "Internal Server Error" });
+    }
 };
+
 
 exports.fetchEnvironment = async (req, res) => {
     const env = await Environment.findOne({ _id: req.user.user_id }).then((data) => {
