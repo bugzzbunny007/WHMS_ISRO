@@ -9,11 +9,11 @@ const today = new Date();
 const formattedDate = today.toISOString().split('T')[0];
 // updateProfile
 exports.updateEnvironment = async (req, res) => {
-    const { environment, _id } = req.body;
+    const { environment, authId } = req.body;
     // Use the upsert option to either update or insert the profile
     Environment.updateOne(
 
-        { _id: _id }, // Find the profile with the specified _id
+        { _id: authId }, // Find the profile with the specified _id
         { name: environment },
         { upsert: true } // Create a new profile if it doesn't exist
 
@@ -21,7 +21,7 @@ exports.updateEnvironment = async (req, res) => {
     ).then(async (User) => {
         console.log(User);
         await InitialUser.findOneAndUpdate(
-            { _id: _id },
+            { _id: authId },
             { $set: { env_exist: true } },
             { upsert: true }
         ).exec();
