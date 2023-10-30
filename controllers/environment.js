@@ -24,9 +24,11 @@ exports.updateEnvironment = async (req, res) => {
             { _id: authId },
             { $set: { env_exist: true } },
             { upsert: true }
-        ).exec();
+        ).exec().then(() => {
+            return res.status(200).json({ message: "Environment updated" })
+        });
 
-        return res.status(200).json({ message: "Environment updated" })
+
     }).catch(function (error) {
         // let errorCode = error.code;
         let errorMessage = error.message;
