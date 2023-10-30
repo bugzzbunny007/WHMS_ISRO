@@ -9,10 +9,10 @@ const formattedDate = today.toISOString().split('T')[0];
 
 // updateProfile
 exports.updateProfile = async (req, res) => {
-    const { authId, age, weight, gender, height } = req.body;
+    const { age, weight, gender, height } = req.body;
     // Use the upsert option to either update or insert the profile
-    Profile.updateOne(
-        { _id: authId },
+    await Profile.updateOne(
+        { _id: req.user.uid },
         { age, weight, gender, height },
         { upsert: true }
     )
@@ -21,7 +21,7 @@ exports.updateProfile = async (req, res) => {
 
             // Update profile_exist to true in InitialUser schema
             await InitialUser.findOneAndUpdate(
-                { _id: authId },
+                { _id: req.user.uid },
                 { $set: { profile_exist: true } },
                 { upsert: true }
             ).exec();
