@@ -40,7 +40,9 @@ app.use("/api/profile", profileRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/superadmin", superAdminRoutes);
 app.use("/api/environment", environmentRoutes);
-
+app.get("/", (req, res) => {
+  res.send("API is running");
+});
 
 // PORT
 const port = 3000;
@@ -48,4 +50,4 @@ const port = 3000;
 // Starting a server
 app.listen(port, () => {
   console.log(`app is running at http://localhost:${port}`);
-});
+}); 

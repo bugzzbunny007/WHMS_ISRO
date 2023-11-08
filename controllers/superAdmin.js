@@ -34,7 +34,7 @@ const createAdmin = async (req, res) => {
                                 .then((updatedUser) => {
                                     // User updated successfully
                                     console.log('Admin updated:', updatedUser);
-                                    logger.logToCloudWatch(formattedDate.toString(),`Admin Updated`);
+                                    logger.logToCloudWatch(formattedDate.toString(), `Admin Updated`);
 
                                     res.status(200).json({ message: 'Admin updated successfully' });
                                 })
@@ -46,7 +46,7 @@ const createAdmin = async (req, res) => {
                         } else {
                             // Admin doesn't exist, create a new admin
                             console.log('admin not exists')
-                            logger.logToCloudWatch(formattedDate.toString(),`admin not exists`);
+                            logger.logToCloudWatch(formattedDate.toString(), `admin not exists`);
 
                             const newAdmin = new Admin({
                                 _id: req.body._id,
@@ -61,7 +61,7 @@ const createAdmin = async (req, res) => {
                                 })
                                 .catch((error) => {
                                     console.error('Error creating admin:', error);
-                                    logger.logToCloudWatch(formattedDate.toString(),`Error creating admin:${error}`);
+                                    logger.logToCloudWatch(formattedDate.toString(), `Error creating admin:${error}`);
 
                                     res.status(500).json({ message: 'Error creating admin' });
                                 });
@@ -69,7 +69,7 @@ const createAdmin = async (req, res) => {
                     })
                         .catch((error) => {
                             console.error('Error finding admin:', error);
-                            logger.logToCloudWatch(formattedDate.toString(),`Error finding admin:${error}`);
+                            logger.logToCloudWatch(formattedDate.toString(), `Error finding admin:${error}`);
 
                             res.status(500).json({ message: 'Error finding admin' });
                         });
@@ -78,10 +78,10 @@ const createAdmin = async (req, res) => {
                     // return res.status(200).json({ message: 'Role admin added to the user.' });
                 }).catch((err) => {
                     console.log(err)
-                    logger.logToCloudWatch(formattedDate.toString(),`Error finding admin:${err}`);
-                    
+                    logger.logToCloudWatch(formattedDate.toString(), `Error finding admin:${err}`);
+
                     return res.status(500).json({ message: 'Error updating user roles' });
-                    
+
                 });
             } else {
                 return res.status(404).json({ message: 'User Not Found' });
@@ -104,7 +104,7 @@ const createAdmin = async (req, res) => {
         // res.status(201).json({ message: 'Admin user created successfully' });
     } catch (error) {
         console.error(error);
-        logger.logToCloudWatch(formattedDate.toString(),`Error creating admin:${error}`);
+        logger.logToCloudWatch(formattedDate.toString(), `Error creating admin:${error}`);
 
         res.status(500).json({ message: 'Error creating admin user' });
     }
@@ -112,54 +112,54 @@ const createAdmin = async (req, res) => {
 
 const removeAdmin = async (req, res) => {
     try {
-
         if (!req.body._id) {
             return res.status(422).json({
-                _id: "_id is required"
+                _id: "_id is required",
             });
         }
 
         const adminId = req.body._id;
-      // Find the admin by ID
 
-      
-      const admin = await Admin.findById(adminId);
-      console.log(admin);
-      admin.delete();
-      if (!admin) {
-        return res.status(404).json({ message: 'Admin not found' });
-      }
-  
-      const initialUser = await InitialUser.findById(adminId);
-      
-      if (initialUser) {
-        initialUser.roles = ['new'];
-        await initialUser.save();
-      }
+        // Find the admin by ID
+        const admin = await Admin.findById(adminId);
 
-      console.log(initialUser.roles);
-  
-      const userDeletePromises = admin.userIds.map(async (userId) => {
-        const deletedUser = await User.findByIdAndDelete(userId);
-        return deletedUser;
-      });
-  
-      const deletedUsers = await Promise.all(userDeletePromises);
-  
-      // Delete the admin from Admin model
-    //   await admin.delete();
-  
-      res.status(200).json({
-        message: 'Admin and associated users deleted successfully',
-        deletedUsers,
-      });
+        if (!admin) {
+            return res.status(404).json({ message: 'Admin not found' });
+        }
+
+        const initialUser = await InitialUser.findById(adminId);
+
+        if (initialUser) {
+            // Update the roles in InitialUser schema to 'unallocated'
+            initialUser.roles = ['unallocated'];
+            initialUser.save();
+        }
+
+        // Create an array of promises to delete users and update roles in InitialUser schema
+        const userDeletePromises = admin.userIds.map(async (userId) => {
+            // Delete the UserSchema for each userId
+            await User.findByIdAndDelete(userId);
+
+            // Update the role in InitialUser schema to 'unallocated'
+            await InitialUser.findByIdAndUpdate(userId, { $set: { roles: ['unallocated'] } });
+        });
+
+        // Execute all the promises to delete users and update roles
+        await Promise.all(userDeletePromises);
+
+        // Use the remove() method to delete the admin document
+        await Admin.deleteOne({ _id: adminId });
+
+        res.status(200).json({
+            message: 'Admin and associated users deleted successfully',
+        });
     } catch (error) {
-      console.error(error);
-      logger.logToCloudWatch(formattedDate.toString(),`Error removing admin and associated users ${error}`);
-      
-      res.status(500).json({ message: 'Error removing admin and associated users' });
+        console.error(error);
+        logger.logToCloudWatch(formattedDate.toString(), `Error removing admin and associated users ${error}`);
+
+        res.status(500).json({ message: 'Error removing admin and associated users' });
     }
-  };
+};
 
 
 const testingFunction = async (req, res) => {
@@ -178,9 +178,9 @@ const fetchAllUsers = async (req, res) => {
         const users = await InitialUser.find(); // Retrieve all users
         res.status(200).json(users);
     } catch (error) {
-        logger.logToCloudWatch(formattedDate.toString(),`Error fetching users ${error}`);
+        logger.logToCloudWatch(formattedDate.toString(), `Error fetching users ${error}`);
         console.error(error);
-    res.status(500).json({ message: 'Error fetching users' });
+        res.status(500).json({ message: 'Error fetching users' });
     }
 }
 

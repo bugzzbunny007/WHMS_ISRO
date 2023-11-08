@@ -5,7 +5,7 @@ const fetchUser = require("../middleware/fetchuser");
 
 const {
     updateProfile,
-  
+
     getProfile
 } = require("../controllers/profile");
 
