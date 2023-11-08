@@ -9,8 +9,20 @@ const today = new Date();
 const formattedDate = today.toISOString().split('T')[0];
 const addUserToAdmin = async (req, res) => {
   try {
+    if (!admin) {
+      logger.logToCloudWatch(formattedDate.toString(), `Admin not found`);
+
+      return res.status(404).json({ message: 'Admin not found' });
+    }
+    if (req.user.uid !== req.body.adminId) {
+      await InitialUser.findOne({ _id: req.user.uid }).then((user) => {
+        if (!user || user['roles'][0] !== 'superadmin') {
+          return res.status(401).json({ error: "Unauthorized" });
+        }
+      })
+    }
     const { adminId, userIds } = req.body;
-    console.log(adminId, userIds)
+
     // Find the admin by ID
     const admin = await Admin.findById(adminId);
 
@@ -19,7 +31,6 @@ const addUserToAdmin = async (req, res) => {
 
       return res.status(404).json({ message: 'Admin not found' });
     }
-    console.log('22')
     const addedUserIds = [];
     const notFoundUserIds = [];
 
@@ -38,11 +49,8 @@ const addUserToAdmin = async (req, res) => {
       }
     }
 
-    console.log('39')
-
     // Save the updated admin document
     await admin.save();
-    console.log('44')
     // Update the User schema with the admin ID for the added users
     console.log(addedUserIds[0])
     // await User.findOneAndUpdate(
@@ -50,21 +58,17 @@ const addUserToAdmin = async (req, res) => {
     //   { $set: { admin: adminId } },
     //   { upsert: true }
     // );
-    console.log('44b')
     for (const userId of addedUserIds) {
       await User.findOneAndUpdate(
         { _id: userId },
         { $set: { admin: adminId } },
         { upsert: true }
       );
-      console.log('52')
       await InitialUser.findOneAndUpdate({ _id: userId },
         { $set: { roles: ['user'] } },
 
       )
-      console.log('57')
     }
-    console.log('Here 59')
 
 
     const result = {
@@ -86,12 +90,20 @@ const removeUserFromAdmin = async (req, res) => {
     const { adminId, userIds } = req.body;
     console.log({ adminId, userIds })
     // Find the admin by ID
+
     const admin = await Admin.findById(adminId);
 
     if (!admin) {
       logger.logToCloudWatch(formattedDate.toString(), `Admin not found`);
 
       return res.status(404).json({ message: 'Admin not found' });
+    }
+    if (req.user.uid !== req.body.adminId) {
+      await InitialUser.findOne({ _id: req.user.uid }).then((user) => {
+        if (!user || user['roles'][0] !== 'superadmin') {
+          return res.status(401).json({ error: "Unauthorized" });
+        }
+      })
     }
 
     const removedUserIds = [];
@@ -155,7 +167,16 @@ const getUnallocatedUsers = async (req, res) => {
 
 const getAdminUsers = async (req, res) => {
   try {
-    const users = await User.find({ admin: req.user.uid }); // Retrieve all users
+    const adminId = req.body._id ? req.body._id : req.user.uid
+
+    if (req.body._id) {
+      await InitialUser.findOne({ _id: req.user.uid }).then((user) => {
+        if (!user || user['roles'][0] !== 'superadmin') {
+          return res.status(401).json({ error: "Unauthorized" });
+        }
+      })
+    }
+    const users = await User.find({ admin: adminId }); // Retrieve all users
     const userIds = users.map((user) => user._id); // Extract user IDs
 
     // Use the user IDs to find the corresponding InitialUser documents

@@ -114,7 +114,7 @@ const removeAdmin = async (req, res) => {
     try {
         if (!req.body._id) {
             return res.status(422).json({
-                _id: "_id is required"
+                _id: "_id is required",
             });
         }
 
@@ -130,22 +130,28 @@ const removeAdmin = async (req, res) => {
         const initialUser = await InitialUser.findById(adminId);
 
         if (initialUser) {
+            // Update the roles in InitialUser schema to 'unallocated'
             initialUser.roles = ['unallocated'];
-            await initialUser.save();
+            initialUser.save();
         }
 
+        // Create an array of promises to delete users and update roles in InitialUser schema
         const userDeletePromises = admin.userIds.map(async (userId) => {
-            const deletedUser = await User.findByIdAndDelete(userId);
-            return deletedUser;
+            // Delete the UserSchema for each userId
+            await User.findByIdAndDelete(userId);
+
+            // Update the role in InitialUser schema to 'unallocated'
+            await InitialUser.findByIdAndUpdate(userId, { $set: { roles: ['unallocated'] } });
         });
 
-        const deletedUsers = await Promise.all(userDeletePromises);
+        // Execute all the promises to delete users and update roles
+        await Promise.all(userDeletePromises);
 
         // Use the remove() method to delete the admin document
         await Admin.deleteOne({ _id: adminId });
+
         res.status(200).json({
             message: 'Admin and associated users deleted successfully',
-            deletedUsers,
         });
     } catch (error) {
         console.error(error);
