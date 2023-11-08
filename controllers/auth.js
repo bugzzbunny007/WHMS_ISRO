@@ -218,7 +218,6 @@ exports.verifyOTP = (req, res) => {
 };
 
 
-
 // forget password
 exports.forgetPassword = (req, res) => {
   if (!req.body.email) {
