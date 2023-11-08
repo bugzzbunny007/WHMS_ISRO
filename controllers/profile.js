@@ -3,31 +3,36 @@ const User = require('../models/User');
 const Profile = require('../models/Profile');
 const fetchUser = require("../middleware/fetchuser");
 const logger = require('./logger');
-
+const InitialUser = require('../models/InitialUser');
 const today = new Date();
 const formattedDate = today.toISOString().split('T')[0];
 
 // updateProfile
 exports.updateProfile = async (req, res) => {
-    const { authId, age, weight, gender, height } = req.body;
-
+    const { age, weight, gender, height } = req.body;
     // Use the upsert option to either update or insert the profile
-    Profile.updateOne(
-        { _id: authId }, // Find the profile with the specified _id
-        { age, weight, gender, height }, // Update the profile with the new data
-        { upsert: true } // Create a new profile if it doesn't exist
-        
-    ).then((User) => {
-        console.log(User);
-        return res.status(200).json({ message: "Profile updated" })
-    }).catch(function (error) {
-        // let errorCode = error.code;
-        let errorMessage = error.message;
-        logger.logToCloudWatch(formattedDate.toString(),`${errorMessage}`);
+    await Profile.updateOne(
+        { _id: req.user.uid },
+        { age, weight, gender, height },
+        { upsert: true }
+    )
+        .then(async (User) => {
+            console.log(User);
 
-        console.log(errorMessage)
+            // Update profile_exist to true in InitialUser schema
+            await InitialUser.findOneAndUpdate(
+                { _id: req.user.uid },
+                { $set: { profile_exist: true } },
+                { upsert: true }
+            ).exec();
 
-    })
+            return res.status(200).json({ message: "Profile updated" });
+        })
+        .catch(function (error) {
+            let errorMessage = error.message;
+            logger.logToCloudWatch(formattedDate.toString(), `${errorMessage}`);
+            console.log(errorMessage);
+        });
 };
 
 // getProfile
