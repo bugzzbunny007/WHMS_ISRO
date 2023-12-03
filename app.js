@@ -30,7 +30,7 @@ app.use(bodyParser.json());
 
 // Use CORS middleware to allow requests from specific origins
 app.use(cors({
-  origin: "http://localhost:5173", // Replace with your client's origin
+  origin: ["http://localhost:5173", "https://whms-isro-sxur-ftgh1a5rg-bugzzbunny007.vercel.app"], // Replace with your client's origin
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   credentials: true // Enable credentials (cookies, authorization headers)
 }));
