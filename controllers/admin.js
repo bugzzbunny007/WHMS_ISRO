@@ -9,11 +9,7 @@ const today = new Date();
 const formattedDate = today.toISOString().split('T')[0];
 const addUserToAdmin = async (req, res) => {
   try {
-    if (!admin) {
-      logger.logToCloudWatch(formattedDate.toString(), `Admin not found`);
 
-      return res.status(404).json({ message: 'Admin not found' });
-    }
     if (req.user.uid !== req.body.adminId) {
       await InitialUser.findOne({ _id: req.user.uid }).then((user) => {
         if (!user || user['roles'][0] !== 'superadmin') {
