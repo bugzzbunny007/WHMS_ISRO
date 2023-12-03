@@ -30,16 +30,11 @@ app.use(bodyParser.json());
 
 // Use CORS middleware to allow requests from specific origins
 app.use(cors({
-  origin: "https://whms-isro-sxur-ftgh1a5rg-bugzzbunny007.vercel.app", // Replace with your client's origin
+  origin: "*", // Allow requests from any origin
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   credentials: true // Enable credentials (cookies, authorization headers)
 }));
 
-app.use(function (req, res, next) {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-  next();
-});
 
 // Routes
 app.use("/api/auth", authRoutes);
