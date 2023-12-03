@@ -35,13 +35,19 @@ app.use(cors({
   credentials: true // Enable credentials (cookies, authorization headers)
 }));
 
+app.use(function (req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  next();
+});
+
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/superadmin", superAdminRoutes);
 app.use("/api/environment", environmentRoutes);
-app.use("/api/user",UserRoutes);
+app.use("/api/user", UserRoutes);
 
 app.get("/", (req, res) => {
   res.send("API is running");
