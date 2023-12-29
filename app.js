@@ -46,19 +46,20 @@ app.use("/api/environment", environmentRoutes);
 app.use("/api/user", UserRoutes);
 app.use("/api/alerts", UserRoutes);
 
-app.get("/", (req, res) => {
-  res.send("API is running");
-});
-
-// PORT
-const port = 3000;
 
 // Get current date and time
 const currentDate = new Date();
 const formattedDate = currentDate.toISOString().split('T')[0];
 const formattedTime = currentDate.toTimeString().split(' ')[0];
 
+app.get("/", (req, res) => {
+  res.send(`API is running | Branch S5 | Dated - ${formattedDate} | Time - ${formattedTime}`);
+});
+
+// PORT
+const port = 3000;
+
 // Starting a server
 app.listen(port, () => {
-  console.log(`App is running at http://localhost:${port} | Branch S5 | Dated - ${formattedDate} | Time - ${formattedTime}`);
+  console.log(`App is running at http://localhost:${port}`);
 });
