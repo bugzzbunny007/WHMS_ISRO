@@ -22,6 +22,7 @@ const adminRoutes = require("./routes/admin")
 const superAdminRoutes = require("./routes/superAdmin")
 const environmentRoutes = require("./routes/environment");
 const UserRoutes = require("./routes/User");
+const alertRoutes = require("./routes/alerts");
 
 
 
@@ -43,6 +44,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/superadmin", superAdminRoutes);
 app.use("/api/environment", environmentRoutes);
 app.use("/api/user", UserRoutes);
+app.use("/api/alerts", UserRoutes);
 
 app.get("/", (req, res) => {
   res.send("API is running");

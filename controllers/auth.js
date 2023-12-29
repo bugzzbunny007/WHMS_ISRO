@@ -9,6 +9,8 @@ const ObjectId = mongoose.Types.ObjectId;
 const bcrypt = require('bcrypt');
 const admin = require('firebase-admin');
 const logger = require('./logger');
+const RealtimeSensorDoc = require('../models/RealtimeSensorDoc');
+const SensorDB = require('../models/SensorDB');
 
 const today = new Date();
 const formattedDate = today.toISOString().split('T')[0];
@@ -26,14 +28,13 @@ exports.signup = async (req, res) => {
       .auth()
       .createUserWithEmailAndPassword(req.body.email, req.body.password)
       .then((userCredential) => {
-        logger.logToCloudWatch(formattedDate.toString(), `User singup successfully ${req.body.email}`);
+        logger.logToCloudWatch(formattedDate.toString(), `User sign up successfully ${req.body.email}`);
         return userCredential.user.updateProfile({
           displayName: req.body.displayName
         });
       })
       .then(() => {
         // Send email verification
-
         return firebase.auth().currentUser.sendEmailVerification();
       })
       .then(() => {
@@ -255,6 +256,16 @@ exports.createMongoUserEndpoint = async (req, res) => {
 
     if (createUserResult === 1) {
       // User created successfully
+      // Example: Call createSensorDocs to create sensor documents
+      const sensorData = {
+        _id: req.user.uid,
+        heartSensor: { value: 0, timestamp: '0', unit: '', range: '' }, // Modify this based on your requirements
+        xSensor: { value: 0, timestamp: '0', unit: '', range: '' },
+        ySensor: { value: 0, timestamp: '0', unit: '', range: '' },
+      };
+
+      await exports.createSensorDocs(sensorData);
+
       return res.status(201).json({ payload: { id: req.user.uid } }); // 201 Created
     } else if (createUserResult === 2) {
       // User already exists
@@ -332,12 +343,41 @@ exports.getMongoUser = async (req, res) => {
       userData.EnvironmentSchema = environment;
     }
 
-    // Search in other schemas and add data to userData as needed...
+    // Check if userData is still an empty object
+    if (Object.keys(userData).length === 0) {
+      // Return a 404 Not Found status code
+      return res.status(404).json({ error: "User data not found" });
+    }
 
     // Return the collected data in a JSON format
     return res.status(200).json(userData);
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Failed to get MongoDB user" });
+  }
+};
+
+
+// Create Sensor Documents
+exports.createSensorDocs = async (sensorData) => {
+  try {
+    // Create a new document for RealtimeSensorDoc
+    const newRealtimeSensorDoc = new RealtimeSensorDoc(sensorData);
+    await newRealtimeSensorDoc.save();
+
+    // Create a new document for SensorDB
+    const newSensorDB = new SensorDB({
+      _id: sensorData._id,
+      heartSensor: sensorData.heartSensor,
+      xSensor: sensorData.xSensor,
+      ySensor: sensorData.ySensor,
+    });
+    await newSensorDB.save();
+
+    console.log("Sensor documents created successfully");
+    return 1; // Success
+  } catch (error) {
+    console.error("Failed to create sensor documents:", error);
+    return 0; // Failure
   }
 };

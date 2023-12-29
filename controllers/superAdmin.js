@@ -1,9 +1,13 @@
 const InitialUser = require("../models/InitialUser");
 var mongoose = require('mongoose');
 const User = require("../models/User");
+const Device = require("../models/Device");
 const Admin = require("../models/Admin");
 const { Types } = mongoose;
 const logger = require('./logger');
+const UserDocument = require('../models/UserDocument');
+const { GridFSBucket } = require('mongodb');
+const { Readable } = require('stream');
 
 
 const today = new Date();
@@ -184,6 +188,236 @@ const fetchAllUsers = async (req, res) => {
     }
 }
 
-module.exports = {
-    createAdmin, testingFunction, removeAdmin, fetchAllUsers
+const approveAdminDocById = async (req, res) => {
+    try {
+        const adminID = req.body.adminID;
+
+        // Update the doc_verified field to true for the specified adminID
+        const updatedUser = await InitialUser.findOneAndUpdate(
+            { _id: adminID },
+            { $set: { doc_verified: true } },
+            { new: true } // Return the updated document
+        );
+
+        if (!updatedUser) {
+            return res.status(404).json({ message: 'Admin user not found' });
+        }
+
+        res.status(200).json({ msg: "Admin Docs approved", updatedUser });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error updating doc_verified field', error: error.message });
+    }
+}
+
+const getDocById = async (req, res) => {
+    try {
+        const userId = req.body._id;
+
+        const db = mongoose.connection.db;
+        const bucket = new GridFSBucket(db, { bucketName: 'userdocuments' });
+
+        // Find the UserDocument with the specified _id
+        const userDocument = await UserDocument.findOne({ _id: userId });
+
+        if (!userDocument) {
+            return res.status(404).json({ message: 'User document not found' });
+        }
+
+        // Open a download stream for the UserDocument's file
+        const downloadStream = bucket.openDownloadStreamByName(userDocument.filename);
+
+        // Set response headers
+        res.setHeader('Content-Type', userDocument.contentType);
+        res.setHeader('Content-Disposition', `inline; filename=${userDocument.originalname}`);
+
+        // Pipe the data from MongoDB to the response
+        downloadStream.pipe(res);
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({ message: 'Error retrieving image', error: err });
+    }
+}
+
+const addDeviceIdToAdmin = async (req, res) => {
+    try {
+        const adminId = req.body.adminId;
+        const deviceIdsToAdd = req.body.deviceIds;
+
+        // Check if any of the devices are already allocated to another admin
+        const existingDevices = await Device.find({
+            deviceId: { $in: deviceIdsToAdd },
+            currentAdminId: { $ne: null },
+        });
+
+        // Store information about devices that are already allocated
+        const allocatedDeviceIds = existingDevices.map(device => device.deviceId);
+
+        // Find devices without a current admin and update their current admin to the new admin
+        const devicesToUpdate = await Device.find({
+            deviceId: { $in: deviceIdsToAdd },
+            currentAdminId: null,
+        });
+
+        const updatedDeviceIds = devicesToUpdate.map(device => device.deviceId);
+        const newDeviceIds = deviceIdsToAdd.filter(deviceId => !allocatedDeviceIds.includes(deviceId) && !updatedDeviceIds.includes(deviceId));
+
+        // Update the devices to set currentAdminId to the new admin
+        await Device.updateMany(
+            { _id: { $in: devicesToUpdate.map(device => device._id) } },
+            { $set: { currentAdminId: adminId } }
+        );
+
+        // Create a new device for each deviceId that doesn't exist
+        const newDevices = newDeviceIds.map(deviceId => ({
+            deviceId,
+            currentAdminId: adminId,
+        }));
+
+        // Insert the new devices into the Device collection
+        await Device.insertMany(newDevices);
+
+        // Update the Admin document with the new deviceIds
+        const updatedAdmin = await Admin.findByIdAndUpdate(
+            adminId,
+            { $addToSet: { deviceIds: { $each: deviceIdsToAdd } } },
+            { new: true }
+        );
+
+        if (!updatedAdmin) {
+            // Handle case where Admin with the given ID is not found
+            console.log(`Admin with ID ${adminId} not found.`);
+            return res.status(404).json({ message: `Admin with ID ${adminId} not found.` });
+        }
+
+        console.log(`Device IDs added to Admin with ID ${adminId}: ${updatedAdmin.deviceIds}`);
+
+        // Provide details of added and not added device IDs
+        const response = {
+            message: 'Device IDs added successfully',
+            newDeviceIds: newDeviceIds,
+            updatedDeviceIds: updatedDeviceIds,
+            notAddedDeviceIds: allocatedDeviceIds,
+        };
+
+        return res.status(200).json(response);
+    } catch (error) {
+        // Handle errors
+        console.error(`Error adding device IDs to Admin ${error}`);
+        return res.status(500).json({ message: 'Error adding device IDs', error: error.message });
+    }
 };
+
+
+const removeDeviceIdFromAdmin = async (req, res) => {
+    try {
+        const adminId = req.body.adminId;
+        const deviceIdsToRemove = req.body.deviceIds;
+
+        // Update the devices to set currentAdminId to null when removing from the admin
+        await Device.updateMany(
+            { deviceId: { $in: deviceIdsToRemove }, currentAdminId: adminId },
+            { $set: { currentAdminId: null } }
+        );
+
+        // Update the Admin document by pulling the deviceIds
+        const updatedAdmin = await Admin.findByIdAndUpdate(
+            adminId,
+            { $pullAll: { deviceIds: deviceIdsToRemove } },
+            { new: true }
+        );
+
+        if (!updatedAdmin) {
+            // Handle case where Admin with the given ID is not found
+            console.log(`Admin with ID ${adminId} not found.`);
+            return res.status(404).json({ message: `Admin with ID ${adminId} not found.` });
+        }
+
+        console.log(`Device IDs removed from Admin with ID ${adminId}: ${updatedAdmin.deviceIds}`);
+        return res.status(200).json({ message: 'Device IDs removed successfully', updatedAdmin });
+    } catch (error) {
+        // Handle errors
+        console.error(`Error removing device IDs from Admin with ID ${adminId}: ${error}`);
+        return res.status(500).json({ message: 'Error removing device IDs', error: error.message });
+    }
+};
+
+const getAllAdmin = async (req, res) => {
+    try {
+        const admins = await InitialUser.aggregate([
+            {
+                $match: { roles: "admin" }
+            },
+            {
+                $lookup: {
+                    from: "admins", // The name of the Admin collection
+                    localField: "_id",
+                    foreignField: "_id",
+                    as: "adminDetails"
+                }
+            }
+        ]);
+
+        return res.status(200).json({
+            admins
+        });
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({ message: 'Internal Server Error', error: err });
+    }
+}
+
+const disableAdmin = async (req, res) => {
+    try {
+        const adminId = req.body.adminId;
+        const updatedAdmin = await Admin.findByIdAndUpdate(
+            adminId,
+            { $set: { accountEnabled: false } },
+            { new: true }
+        );
+
+        if (!updatedAdmin) {
+            // Handle case where Admin with the given ID is not found
+            console.log(`Admin with ID ${adminId} not found.`);
+            return res.status(404).json({ message: `Admin with ID ${adminId} not found.` });
+        }
+
+        console.log(`Admin with ID ${adminId} has been disabled: ${updatedAdmin}`);
+        return res.status(200).json({ message: `Admin with ID ${adminId} has been disabled.`, updatedAdmin });
+    } catch (error) {
+        // Handle errors
+        console.error(`Error disabling Admin with ID ${adminId}: ${error}`);
+        return res.status(500).json({ message: `Error disabling Admin with ID ${adminId}.`, error: error.message });
+    }
+};
+
+const enableAdmin = async (req, res) => {
+    try {
+        const adminId = req.body.adminId;
+        const updatedAdmin = await Admin.findByIdAndUpdate(
+            adminId,
+            { $set: { accountEnabled: true } },
+            { new: true }
+        );
+
+        if (!updatedAdmin) {
+            // Handle case where Admin with the given ID is not found
+            console.log(`Admin with ID ${adminId} not found.`);
+            return res.status(404).json({ message: `Admin with ID ${adminId} not found.` });
+        }
+
+        console.log(`Admin with ID ${adminId} has been enabled: ${updatedAdmin}`);
+        return res.status(200).json({ message: `Admin with ID ${adminId} has been enabled.`, updatedAdmin });
+    } catch (error) {
+        // Handle errors
+        console.error(`Error enabling Admin with ID ${adminId}: ${error}`);
+        return res.status(500).json({ message: `Error enabling Admin with ID ${adminId}.`, error: error.message });
+    }
+};
+
+//addDeviceIdToAdmin,
+//removeDeviceIdFromAdmin
+module.exports = {
+    createAdmin, testingFunction, removeAdmin, fetchAllUsers, approveAdminDocById, getDocById, addDeviceIdToAdmin, removeDeviceIdFromAdmin, getAllAdmin, disableAdmin, enableAdmin
+};
+

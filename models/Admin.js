@@ -6,7 +6,9 @@ const userRoles = ['admin', 'superadmin'];
 const adminSchema = new mongoose.Schema({
     _id: { type: String, required: true },
     maxUserCount: { type: Number, default: 10 },
-    userIds: [{ type: String, default: null }] // Reference to User model
+    userIds: [{ type: String, default: null }],// Reference to User model
+    deviceIds: [{ type: String, default: null }],
+    accountEnabled: { type: Boolean, default: false },
 });
 
 // Create the Admin model

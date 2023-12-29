@@ -1,9 +1,11 @@
 const Admin = require("../models/Admin");
 const User = require("../models/User");
+const Device = require("../models/Device");
 const InitialUser = require("../models/InitialUser");
 var mongoose = require('mongoose');
 const { Types } = mongoose;
 const logger = require('./logger');
+
 
 const today = new Date();
 const formattedDate = today.toISOString().split('T')[0];
@@ -186,7 +188,76 @@ const getAdminUsers = async (req, res) => {
   }
 }
 
+const getUserDocById = async (req, res) => {
+  try {
+    const userId = req.body._id;
+    const adminId = req.user.uid;
+
+    // Check if the adminId exists
+    const admin = await Admin.findOne({ _id: adminId });
+
+    if (!admin) {
+      return res.status(404).json({ message: 'Admin not found' });
+    }
+
+    // Check if userId belongs to the admin
+    if (!admin.userIds.includes(userId)) {
+      return res.status(401).json({ message: "Unauthorized: This user doesn't belong to you" });
+    }
+
+    const db = mongoose.connection.db;
+    const bucket = new GridFSBucket(db, { bucketName: 'userdocuments' });
+
+    // Find the UserDocument with the specified _id
+    const userDocument = await UserDocument.findOne({ _id: userId });
+
+    if (!userDocument) {
+      return res.status(404).json({ message: 'User document not found' });
+    }
+
+    // Open a download stream for the UserDocument's file
+    const downloadStream = bucket.openDownloadStreamByName(userDocument.filename);
+
+    // Set response headers
+    res.setHeader('Content-Type', userDocument.contentType);
+    res.setHeader('Content-Disposition', `inline; filename=${userDocument.originalname}`);
+
+    // Pipe the data from MongoDB to the response
+    downloadStream.pipe(res);
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ message: 'Error retrieving image', error: err });
+  }
+}
+
+const getDeviceIds = async (req, res) => {
+  try {
+    const adminId = req.user.uid;
+
+    // Find the admin with the specified _id and populate the deviceIds
+    const admin = await Admin.findOne({ _id: adminId }).populate('deviceIds');
+
+    if (!admin) {
+      return res.status(404).json({ message: 'Admin not found' });
+    }
+
+    // Extract deviceIds and associated device data from the found admin document
+    const devices = admin.deviceIds || [];
+    console.log(devices)
+
+    // Retrieve the entire Device documents for the admin's device IDs
+    const deviceDocuments = await Device.find({ deviceId: { $in: devices.map(device => device) } });
+
+    // Return the entire device schema data and documents for the admin's device IDs
+    return res.status(200).json({ devices, deviceDocuments });
+  } catch (error) {
+    logger.logToCloudWatch(formattedDate.toString(), `Error fetching deviceIds ${error}`);
+    console.error(error);
+    res.status(500).json({ message: 'Error fetching device data' });
+  }
+};
+
 
 module.exports = {
-  addUserToAdmin, removeUserFromAdmin, getUnallocatedUsers, getAdminUsers
+  addUserToAdmin, removeUserFromAdmin, getUnallocatedUsers, getAdminUsers, getUserDocById, getDeviceIds
 };

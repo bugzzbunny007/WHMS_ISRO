@@ -11,8 +11,11 @@ const InitialUserSchema = new Schema({
         type: [String],
         default: ['unallocated'], // Default role(s)
     },
-    profile_exist:{type: Boolean,default: false },
-    env_exist:{type: Boolean,default: false }
+    profile_exist: { type: Boolean, default: false },
+    env_exist: { type: Boolean, default: false },
+    doc_verified: { type: Boolean, default: false },
+    doc_uploaded: { type: Boolean, default: false },
+
 });
 
 const InitialUser = mongoose.model('initialuser', InitialUserSchema);

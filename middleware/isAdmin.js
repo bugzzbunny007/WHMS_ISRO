@@ -24,7 +24,7 @@ const isAdmin = async (req, res, next) => {
     console.error(error);
     const today = new Date();
     const formattedDate = today.toISOString().split('T')[0];
-    logger.logToCloudWatch(formattedDate.toString(),`isAdmin.js Internal Server Error: ${error}`);
+    logger.logToCloudWatch(formattedDate.toString(), `isAdmin.js Internal Server Error: ${error}`);
 
     return res.status(401).json({ message: 'Internal Server Error' });
   }

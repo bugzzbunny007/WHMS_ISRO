@@ -12,7 +12,6 @@ const isSuperAdmin = async (req, res, next) => {
                     next();
                 } else {
                     return res.status(401).json({ message: 'UnAuthorized' });
-
                 }
             } else {
                 return res.status(401).json({ message: 'UnAuthorized' });
@@ -24,8 +23,8 @@ const isSuperAdmin = async (req, res, next) => {
         console.error(error);
         const today = new Date();
         const formattedDate = today.toISOString().split('T')[0];
-        logger.logToCloudWatch(formattedDate.toString(),`isAdmin.js Internal Server Error: ${error}`);
-    
+        logger.logToCloudWatch(formattedDate.toString(), `isAdmin.js Internal Server Error: ${error}`);
+
         return res.status(401).json({ message: 'Internal Server Error' });
     }
 };
