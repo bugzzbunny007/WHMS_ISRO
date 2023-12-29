@@ -53,7 +53,12 @@ app.get("/", (req, res) => {
 // PORT
 const port = 3000;
 
+// Get current date and time
+const currentDate = new Date();
+const formattedDate = currentDate.toISOString().split('T')[0];
+const formattedTime = currentDate.toTimeString().split(' ')[0];
+
 // Starting a server
 app.listen(port, () => {
-  console.log(`app is running at http://localhost:${port}`);
-}); 
+  console.log(`App is running at http://localhost:${port} | Branch S5 | Dated - ${formattedDate} | Time - ${formattedTime}`);
+});
