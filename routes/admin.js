@@ -2,7 +2,10 @@ const express = require("express");
 const router = express.Router();
 const fetchUser = require("../middleware/fetchuser");
 const isAdmin = require("../middleware/isAdmin");
-const { addUserToAdmin, removeUserFromAdmin, getUnallocatedUsers, getAdminUsers, getUserDocById, getDeviceIds } = require("../controllers/admin");
+const multer = require('multer');
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
+const { addUserToAdmin, removeUserFromAdmin, getUnallocatedUsers, getAdminUsers, getUserDocById, getDeviceIds, uploadDocument, getImageByToken } = require("../controllers/admin");
 
 // Define a POST route to create an admin user
 
@@ -17,5 +20,9 @@ router.get('/get-added-users', fetchUser, isAdmin, getAdminUsers);
 router.get('/getUserDocById', fetchUser, isAdmin, getUserDocById);
 
 router.get('/getDeviceIds', fetchUser, isAdmin, getDeviceIds);
+
+router.post("/uploadDocument", fetchUser, isAdmin, upload.single('file'), uploadDocument) // to do add validation
+
+router.get("/getUserDocImage", fetchUser, isAdmin,  getImageByToken);// to do add validation
 
 module.exports = router;
