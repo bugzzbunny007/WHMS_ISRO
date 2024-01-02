@@ -251,7 +251,8 @@ exports.createMongoUserEndpoint = async (req, res) => {
       email: req.user.email,
       _id: req.user.uid,
       profile_exist: false,
-      env_exist: false
+      env_exist: false,
+      role: req.body.role
     });
 
     if (createUserResult === 1) {
@@ -284,20 +285,21 @@ exports.createMongoUserEndpoint = async (req, res) => {
 
 exports.createMongoUser = async (user) => {
   try {
-
-    console.log("Will Create mongo user");
-    console.log("bunny", user)
-    console.log(user._id)
     // Check if a user with the same authId already exists in MongoDB
     const existingUser = await InitialUser.findOne({ _id: user._id });
 
     if (existingUser) {
       console.log("User already exists in MongoDB");
-      return 2; // User already exists, return 0 for failure
+      return 2; // User already exists, return 2 for failure
     }
 
     // Create a new user with _id as an ObjectId
     const newInitialUser = new InitialUser(user);
+
+    // Update roles if provided in req.body
+    if (user.role) {
+      newInitialUser.roles = [user.role]; // Set the roles field with the provided role
+    }
 
     // Save the new user to the database
     await newInitialUser.save();

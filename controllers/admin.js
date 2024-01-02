@@ -267,48 +267,74 @@ const uploadDocument = async (req, res) => {
     const db = mongoose.connection.db;
     const bucket = new GridFSBucket(db, { bucketName: 'userdocuments' });
 
-    // Check if a document with the given _id already exists
+    // Find the existing document with the given _id
     const existingDocument = await UserDocument.findOne({ _id: customId });
 
+    // If a document with the given _id already exists, update it
     if (existingDocument) {
-      // Handle the case where a document with the given _id already exists
-      return res.status(409).json({ message: 'Document with the specified _id already exists' });
+      const updateResult = await UserDocument.findOneAndUpdate(
+        { _id: customId },
+        {
+          originalname: originalname,
+          filename: `${customId}_${originalname}`,
+          contentType: mimetype,
+        },
+        { new: true } // Return the updated document
+      );
+
+      const uploadStream = bucket.openUploadStream(updateResult.filename, {
+        contentType: mimetype,
+      });
+
+      const bufferStream = new Readable();
+      bufferStream.push(buffer);
+      bufferStream.push(null);
+
+      bufferStream.pipe(uploadStream);
+
+      uploadStream.on('finish', () => {
+        return res.json({ message: 'File uploaded successfully' });
+      });
+    } else {
+      // If the document with the given _id doesn't exist, create a new one
+      const bufferStream = new Readable();
+      bufferStream.push(buffer);
+      bufferStream.push(null);
+
+      const userDocument = new UserDocument({
+        _id: customId,
+        originalname: originalname,
+        filename: `${customId}_${originalname}`,
+        contentType: mimetype,
+      });
+
+      await userDocument.save();
+
+      const uploadStream = bucket.openUploadStream(userDocument.filename, {
+        contentType: mimetype,
+      });
+
+      bufferStream.pipe(uploadStream);
+
+      uploadStream.on('finish', () => {
+        return res.json({ message: 'File uploaded successfully' });
+      });
     }
-
-    // Create a readable stream from the buffer
-    const bufferStream = new Readable();
-    bufferStream.push(buffer);
-    bufferStream.push(null); // Signals the end of the stream
-
-    // Manually set the _id field
-    const userDocument = new UserDocument({
-      _id: customId,
-      originalname: originalname,
-      filename: `${customId}_${originalname}`,
-      contentType: mimetype,
-    });
-
-    // Save the user document to MongoDB
-    await userDocument.save();
-
-    const uploadStream = bucket.openUploadStream(userDocument.filename, {
-      contentType: mimetype,
-    });
-
-    bufferStream.pipe(uploadStream);
-
-    uploadStream.on('finish', () => {
-      return res.json({ message: 'File uploaded successfully' });
-    });
   } catch (err) {
     console.log(err);
 
-    // Check for duplicate key error
     if (err.code === 11000) {
-      return res.status(409).json({ message: 'Duplicate key error. Document with the specified _id already exists.' });
+      return res
+        .status(409)
+        .json({
+          message:
+            'Duplicate key error. Document with the specified _id already exists.',
+        });
     }
 
-    return res.status(400).json({ message: 'Error uploading file', error: err });
+    return res
+      .status(400)
+      .json({ message: 'Error uploading file', error: err });
   }
 };
 
