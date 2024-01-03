@@ -4,9 +4,7 @@ const mongoose = require('mongoose');
 const fs = require('fs');
 const app = express();
 const InitialUser = require('../models/InitialUser');
-const UserDocument = require('../models/UserDocument');
-const { GridFSBucket } = require('mongodb');
-const { Readable } = require('stream');
+
 
 exports.findUserByEmail = async (req, res) => {
   try {
