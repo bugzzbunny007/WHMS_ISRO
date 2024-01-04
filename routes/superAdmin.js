@@ -24,7 +24,7 @@ router.post('/removeadmin', fetchUser, isSuperAdmin, removeAdmin);
 
 router.get('/getallusers', fetchUser, isSuperAdmin, fetchAllUsers);
 
-router.get('/getDocById', fetchUser, isSuperAdmin, getDocById);
+router.post('/getDocById', fetchUser, isSuperAdmin, getDocById);
 
 router.post('/approveAdminDocById', fetchUser, isSuperAdmin, approveAdminDocById);
 
