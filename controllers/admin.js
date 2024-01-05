@@ -263,7 +263,6 @@ const uploadDocument = async (req, res) => {
   try {
     const { originalname, buffer, mimetype } = req.file;
     const customId = req.user.uid; // pass normal id if not using token
-    console.log(req.file);
     console.log(customId);
 
     const db = mongoose.connection.db;
@@ -293,6 +292,11 @@ const uploadDocument = async (req, res) => {
       bufferStream.push(null);
 
       bufferStream.pipe(uploadStream);
+      const updatedDocUploadedField = await InitialUser.findOneAndUpdate(
+        { _id: customId },
+        { $set: { doc_uploaded: true } },
+        { new: true } // Return the updated document
+      );
 
       uploadStream.on('finish', () => {
         return res.json({ message: 'File uploaded successfully' });
@@ -317,7 +321,11 @@ const uploadDocument = async (req, res) => {
       });
 
       bufferStream.pipe(uploadStream);
-
+      const updatedDocUploadedField = await InitialUser.findOneAndUpdate(
+        { _id: customId },
+        { $set: { doc_uploaded: true } },
+        { new: true } // Return the updated document
+      );
       uploadStream.on('finish', () => {
         return res.json({ message: 'File uploaded successfully' });
       });
