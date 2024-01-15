@@ -6,9 +6,11 @@ const isSuperAdmin = async (req, res, next) => {
     try {
         console.log(req.user)
         InitialUser.findOne({ _id: req.user.uid }).then((data) => {
+            console.log("here superadmin")
             console.log(data)
             if (data) {
                 if (Array.isArray(data.roles) && data.roles.includes('superadmin')) {
+                    console.log("this is superadmin ")
                     next();
                 } else {
                     return res.status(401).json({ message: 'UnAuthorized' });

@@ -6,23 +6,15 @@ const DeviceSchema = new Schema({
     deviceId: { type: String, required: true },
     currentUserId: { type: String, default: null },
     currentAdminId: { type: String, default: null },
+    timeStamp: { type: String, default: "" },
     heartSensor: {
-        value: { type: Number, default: null },
-        timestamp: { type: String, default: null },
-        unit: { type: String, default: null },
-        range: { type: String, default: null },
+        type: String, default: ""
     },
     xSensor: {
-        value: { type: Number, default: null },
-        timestamp: { type: String, default: null },
-        unit: { type: String, default: null },
-        range: { type: String, default: null },
+        type: String, default: ""
     },
     ySensor: {
-        value: { type: Number, default: null },
-        timestamp: { type: String, default: null },
-        unit: { type: String, default: null },
-        range: { type: String, default: null },
+        type: String, default: ""
     },
 });
 

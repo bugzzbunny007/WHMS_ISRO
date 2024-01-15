@@ -13,7 +13,8 @@ const {
   createMongoUser,
   refresh,
   createMongoUserEndpoint,
-  getMongoUser
+  getMongoUser,
+  updateDeviceId
 } = require("../controllers/auth");
 
 router.post("/signup", signup);
@@ -31,5 +32,7 @@ router.post("/create-mongo-user", fetchUser, createMongoUserEndpoint);
 router.get("findUserByEmail")
 
 router.get("/get-mongo-user", fetchUser, getMongoUser);
+
+router.post("/updateDeviceId", updateDeviceId);
 
 module.exports = router;

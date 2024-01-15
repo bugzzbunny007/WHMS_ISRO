@@ -4,6 +4,7 @@ const logger = require('../controllers/logger');
 // Define the isAdmin middleware
 const isAdmin = async (req, res, next) => {
   try {
+    console.log("in is admin")
     console.log(req.user)
     InitialUser.findOne({ _id: req.user.uid }).then((data) => {
       console.log(data)

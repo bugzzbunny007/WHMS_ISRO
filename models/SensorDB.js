@@ -22,6 +22,9 @@ const SensorDBSchema = new Schema({
     },
     xSensor: [ValueTimestampSchema],
     ySensor: [ValueTimestampSchema],
+    heartSensorAlertTimeStamp: { type: String, default: "" },
+    xSensorAlertTimeStamp: { type: String, default: "" },
+    ySensorAlertTimeStamp: { type: String, default: "" },
     maxRecordSize: { type: Number, default: 60 }, // Set your desired max size here
 });
 

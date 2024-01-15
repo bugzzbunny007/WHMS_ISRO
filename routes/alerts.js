@@ -12,4 +12,5 @@ const {
 
 router.post("/sendAlert", sendAlert);
 
+
 module.exports = router;

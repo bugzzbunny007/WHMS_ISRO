@@ -2,6 +2,8 @@ const Admin = require("../models/Admin");
 const User = require("../models/User");
 const Device = require("../models/Device");
 const InitialUser = require("../models/InitialUser");
+const Environment = require("../models/Environment");
+const Profile = require("../models/Profile");
 var mongoose = require('mongoose');
 const { Types } = mongoose;
 const logger = require('./logger');
@@ -263,6 +265,7 @@ const uploadDocument = async (req, res) => {
   try {
     const { originalname, buffer, mimetype } = req.file;
     const customId = req.user.uid; // pass normal id if not using token
+    console.log("in upload document")
     console.log(customId);
 
     const db = mongoose.connection.db;
@@ -378,6 +381,44 @@ const getImageByToken = async (req, res) => {
 };
 
 
+const getDeviceData = async (req, res) => {
+  try {
+    const deviceId = req.body.deviceId;
+    const deviceData = await Device.findOne({ deviceId: "deviceId1" });
+
+    if (!deviceData) {
+      return res.status(404).json({ message: 'Device not found' });
+    }
+
+    // Extract currentUserId from deviceData
+    const currentUserId = deviceData.currentUserId;
+
+    // Query Environment collection using currentUserId
+    const environmentData = await Environment.findOne({ _id: currentUserId });
+
+    // Query InitialUser collection using currentUserId
+    const initialUserData = await InitialUser.findOne({ _id: currentUserId });
+
+    // Query Profile collection using currentUserId
+    const profileData = await Profile.findOne({ _id: currentUserId });
+
+    // Create a response object with the retrieved data
+    const responseData = {
+      deviceData,
+      environmentData,
+      initialUserData,
+      profileData,
+    };
+
+    return res.status(200).json(responseData);
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ message: 'Internal Server Error', error: err });
+  }
+};
+
+
+
 module.exports = {
-  addUserToAdmin, removeUserFromAdmin, getUnallocatedUsers, getAdminUsers, getUserDocById, getDeviceIds, getImageByToken, uploadDocument,
+  addUserToAdmin, removeUserFromAdmin, getUnallocatedUsers, getAdminUsers, getUserDocById, getDeviceIds, getImageByToken, uploadDocument, getDeviceData,
 };

@@ -28,6 +28,7 @@ const fetchUser = (req, res, next) => {
             next();
         })
         .catch((error) => {
+            console.log(error)
             console.log(error.code)
             if (error.code == "auth/id-token-expired") {
                 logger.logToCloudWatch(formattedDate.toString(), `Issue in fetchuser: ${error}`);
@@ -35,6 +36,7 @@ const fetchUser = (req, res, next) => {
             }
             else {
                 logger.logToCloudWatch(formattedDate.toString(), `Issue in fetchuser: ${error}`);
+                console.log("fetchuser 39")
                 return res.status(500).json({ error: "Internal Server Error" });
             }
         });

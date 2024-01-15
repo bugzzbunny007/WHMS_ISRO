@@ -10,6 +10,7 @@ const bcrypt = require('bcrypt');
 const admin = require('firebase-admin');
 const logger = require('./logger');
 const RealtimeSensorDoc = require('../models/RealtimeSensorDoc');
+const Device = require('../models/Device');
 const SensorDB = require('../models/SensorDB');
 
 const today = new Date();
@@ -252,7 +253,8 @@ exports.createMongoUserEndpoint = async (req, res) => {
       _id: req.user.uid,
       profile_exist: false,
       env_exist: false,
-      role: req.body.role
+      role: req.body.role,
+      phone: req.user.phone_number,
     });
 
     if (createUserResult === 1) {
@@ -281,8 +283,6 @@ exports.createMongoUserEndpoint = async (req, res) => {
   }
 };
 
-
-
 exports.createMongoUser = async (user) => {
   try {
     // Check if a user with the same authId already exists in MongoDB
@@ -304,6 +304,15 @@ exports.createMongoUser = async (user) => {
     // Save the new user to the database
     await newInitialUser.save();
 
+    // Check if the user's role is 'admin' and upsert an Admin schema
+    if (user.role === 'admin') {
+      await Admin.findByIdAndUpdate(
+        user._id,
+        { $setOnInsert: { _id: user._id } },
+        { upsert: true, new: true }
+      );
+    }
+
     console.log("MongoDB User created successfully");
     return 1; // User created successfully, return 1 for success
   } catch (error) {
@@ -311,6 +320,7 @@ exports.createMongoUser = async (user) => {
     return 0; // Failed to create user, return 0 for failure
   }
 };
+
 
 // Get Mongo User
 exports.getMongoUser = async (req, res) => {
@@ -381,5 +391,31 @@ exports.createSensorDocs = async (sensorData) => {
   } catch (error) {
     console.error("Failed to create sensor documents:", error);
     return 0; // Failure
+  }
+};
+
+//update device Id
+// update device Id
+exports.updateDeviceId = async (req, res) => {
+  try {
+    // const id = req.user.uid
+    const id = "someUid";
+    const deviceIdToUpdate = req.body.deviceId;
+
+    // Find the device by deviceId and update currentUserId
+    const updatedDevice = await Device.findOneAndUpdate(
+      { deviceId: deviceIdToUpdate },
+      { currentUserId: id },
+      { new: true } // to return the updated document
+    );
+
+    if (!updatedDevice) {
+      return res.status(404).json({ error: "Device not found" });
+    }
+
+    return res.status(200).json({ msg: `Updated currentUserId for device ${deviceIdToUpdate}` });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Failed to update device" });
   }
 };

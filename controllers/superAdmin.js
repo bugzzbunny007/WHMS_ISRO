@@ -8,7 +8,10 @@ const logger = require('./logger');
 const UserDocument = require('../models/UserDocument');
 const { GridFSBucket } = require('mongodb');
 const { Readable } = require('stream');
-
+const Environment = require("../models/Environment");
+const Profile = require("../models/Profile");
+const RealtimeSensorDoc = require("../models/RealtimeSensorDoc");
+const SensorDB = require("../models/SensorDB");
 
 const today = new Date();
 const formattedDate = today.toISOString().split('T')[0];
@@ -415,9 +418,65 @@ const enableAdmin = async (req, res) => {
     }
 };
 
+
+const deleteMongoUser = async (req, res) => {
+    try {
+        const userId = req.body._id;
+        const deletedSchemas = [];
+
+        // Delete from Admin collection
+        const adminResult = await Admin.deleteOne({ _id: userId });
+        if (adminResult.deletedCount > 0) {
+            deletedSchemas.push('Admin');
+        }
+
+        // Delete from Environment collection
+        const environmentResult = await Environment.deleteOne({ _id: userId });
+        if (environmentResult.deletedCount > 0) {
+            deletedSchemas.push('Environment');
+        }
+
+        // Delete from InitialUser collection
+        const initialUserResult = await InitialUser.deleteOne({ _id: userId });
+        if (initialUserResult.deletedCount > 0) {
+            deletedSchemas.push('InitialUser');
+        }
+
+        // Delete from Profile collection
+        const profileResult = await Profile.deleteOne({ _id: userId });
+        if (profileResult.deletedCount > 0) {
+            deletedSchemas.push('Profile');
+        }
+
+        // Delete from RealtimeSensorDoc collection
+        const realtimeSensorResult = await RealtimeSensorDoc.deleteOne({ _id: userId });
+        if (realtimeSensorResult.deletedCount > 0) {
+            deletedSchemas.push('RealtimeSensorDoc');
+        }
+
+        // Delete from SensorDB collection
+        const sensorDBResult = await SensorDB.deleteOne({ _id: userId });
+        if (sensorDBResult.deletedCount > 0) {
+            deletedSchemas.push('SensorDB');
+        }
+
+        // Delete from User collection
+        const userResult = await User.deleteOne({ _id: userId });
+        if (userResult.deletedCount > 0) {
+            deletedSchemas.push('User');
+        }
+
+        return res.status(200).json({ msg: "Success", deletedSchemas });
+    } catch (error) {
+        // Handle errors
+        console.log(error)
+        return res.status(500).json({ message: `Error deleting ` });
+    }
+};
+
 //addDeviceIdToAdmin,
 //removeDeviceIdFromAdmin
 module.exports = {
-    createAdmin, testingFunction, removeAdmin, fetchAllUsers, approveAdminDocById, getDocById, addDeviceIdToAdmin, removeDeviceIdFromAdmin, getAllAdmin, disableAdmin, enableAdmin
+    createAdmin, testingFunction, removeAdmin, fetchAllUsers, approveAdminDocById, getDocById, addDeviceIdToAdmin, removeDeviceIdFromAdmin, getAllAdmin, disableAdmin, enableAdmin, deleteMongoUser
 };
 

@@ -6,7 +6,7 @@ const InitialUserSchema = new Schema({
     _id: { type: String, required: true },
     name: { type: String, required: true },
     email: { type: String },
-    phone: { type: String, default: "1234567890" },
+    phone: { type: String, required: true },
     roles: {
         type: [String],
         default: ['unallocated'], // Default role(s)

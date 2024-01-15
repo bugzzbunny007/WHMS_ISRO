@@ -9,7 +9,7 @@ const {
     getProfile
 } = require("../controllers/profile");
 
-router.post("/update-profile", fetchUser, updateProfile);
+router.post("/update-profile", updateProfile);
 
 router.get("/get-profile", fetchUser, getProfile);
 

@@ -13,7 +13,8 @@ const {
     removeDeviceIdFromAdmin,
     getAllAdmin,
     disableAdmin,
-    enableAdmin
+    enableAdmin,
+    deleteMongoUser
 } = require("../controllers/superAdmin");
 
 
@@ -24,7 +25,7 @@ router.post('/removeadmin', fetchUser, isSuperAdmin, removeAdmin);
 
 router.get('/getallusers', fetchUser, isSuperAdmin, fetchAllUsers);
 
-router.post('/getDocById', fetchUser, isSuperAdmin, getDocById);
+router.post('/getDocById', getDocById, isSuperAdmin);
 
 router.post('/approveAdminDocById', fetchUser, isSuperAdmin, approveAdminDocById);
 
@@ -37,6 +38,8 @@ router.get('/getAllAdmin', fetchUser, isSuperAdmin, getAllAdmin);
 router.post('/disableAdmin', fetchUser, isSuperAdmin, disableAdmin);
 
 router.post('/enableAdmin', fetchUser, isSuperAdmin, enableAdmin);
+
+router.post('/deleteMongoUser', deleteMongoUser);
 
 router.post('/testing', fetchUser, testingFunction);
 
