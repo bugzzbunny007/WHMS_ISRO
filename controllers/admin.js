@@ -234,33 +234,6 @@ const getUserDocById = async (req, res) => {
   }
 }
 
-const getDeviceIds = async (req, res) => {
-  try {
-    const adminId = req.user.uid;
-
-    // Find the admin with the specified _id and populate the deviceIds
-    const admin = await Admin.findOne({ _id: adminId }).populate('deviceIds');
-
-    if (!admin) {
-      return res.status(404).json({ message: 'Admin not found' });
-    }
-
-    // Extract deviceIds and associated device data from the found admin document
-    const devices = admin.deviceIds || [];
-    console.log(devices)
-
-    // Retrieve the entire Device documents for the admin's device IDs
-    const deviceDocuments = await Device.find({ deviceId: { $in: devices.map(device => device) } });
-
-    // Return the entire device schema data and documents for the admin's device IDs
-    return res.status(200).json({ devices, deviceDocuments });
-  } catch (error) {
-    logger.logToCloudWatch(formattedDate.toString(), `Error fetching deviceIds ${error}`);
-    console.error(error);
-    res.status(500).json({ message: 'Error fetching device data' });
-  }
-};
-
 const uploadDocument = async (req, res) => {
   try {
     const { originalname, buffer, mimetype } = req.file;
@@ -379,6 +352,51 @@ const getImageByToken = async (req, res) => {
     return res.status(500).json({ message: 'Error retrieving image', error: err });
   }
 };
+
+
+const getDeviceIds = async (req, res) => {
+  try {
+    const adminId = req.user.uid;
+    // Find the admin with the specified _id and populate the deviceIds
+    const admin = await Admin.findOne({ _id: adminId }).populate('deviceIds');
+
+    if (!admin) {
+      return res.status(404).json({ message: 'Admin not found' });
+    }
+
+    // Extract deviceIds and associated device data from the found admin document
+    const devices = admin.deviceIds || [];
+    console.log(devices);
+
+    // Retrieve the entire Device documents for the admin's device IDs
+    const deviceDocuments = await Promise.all(devices.map(async (device) => {
+      const deviceDocument = await Device.findOne({ deviceId: device });
+
+      // Fetch data from other schemas using currentUserId
+      const currentUserId = deviceDocument.currentUserId;
+
+      const environmentData = await Environment.findOne({ _id: currentUserId });
+      const initialUserData = await InitialUser.findOne({ _id: currentUserId });
+      const profileData = await Profile.findOne({ _id: currentUserId });
+
+      return {
+        deviceId: device,
+        deviceData: deviceDocument,
+        environmentData,
+        initialUserData,
+        profileData,
+      };
+    }));
+
+    // Return the entire device schema data and documents for the admin's device IDs
+    return res.status(200).json({ devices: deviceDocuments });
+  } catch (error) {
+    logger.logToCloudWatch(formattedDate.toString(), `Error fetching deviceIds ${error}`);
+    console.error(error);
+    res.status(500).json({ message: 'Error fetching device data' });
+  }
+};
+
 
 
 const getDeviceData = async (req, res) => {
