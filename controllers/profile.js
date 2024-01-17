@@ -11,7 +11,7 @@ const formattedDate = today.toISOString().split('T')[0];
 exports.updateProfile = async (req, res) => {
 
     const uid = req.user.uid
-    const { age, weight, gender, height } = req.body;
+    const { dob, weight, gender, height } = req.body;
     console.log(req)
     console.log(req.body)
     // console.log(Datetime.now())
@@ -19,7 +19,7 @@ exports.updateProfile = async (req, res) => {
     await Profile.updateOne(
         { _id: uid },
         {
-            age,
+            dob,
             weight, gender, height
         },
         { upsert: true }
