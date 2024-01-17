@@ -4,8 +4,8 @@ const { Schema } = mongoose;
 // Mongoose Schema for Realtime Sensor Data
 const DeviceSchema = new Schema({
     deviceId: { type: String, required: true },
-    currentUserId: { type: String, default: null },
-    currentAdminId: { type: String, default: null },
+    currentUserId: { type: String, default: "" },
+    currentAdminId: { type: String, default: "" },
     timeStamp: { type: String, default: "" },
     heartSensor: {
         type: String, default: ""

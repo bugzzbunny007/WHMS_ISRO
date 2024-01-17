@@ -399,7 +399,7 @@ exports.createSensorDocs = async (sensorData) => {
 exports.updateDeviceId = async (req, res) => {
   try {
     // const id = req.user.uid
-    const id = req.body.deviceId;
+    const id = req.user.uid;
     const deviceIdToUpdate = req.body.deviceId;
 
     // Find the device by deviceId and update currentUserId
