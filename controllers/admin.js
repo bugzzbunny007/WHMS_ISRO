@@ -402,7 +402,7 @@ const getDeviceIds = async (req, res) => {
 const getDeviceData = async (req, res) => {
   try {
     const deviceId = req.body.deviceId;
-    const deviceData = await Device.findOne({ deviceId: "deviceId1" });
+    const deviceData = await Device.findOne({ deviceId: deviceId });
 
     if (!deviceData) {
       return res.status(404).json({ message: 'Device not found' });
