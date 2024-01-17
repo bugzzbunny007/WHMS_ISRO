@@ -353,26 +353,20 @@ const getImageByToken = async (req, res) => {
   }
 };
 
-
 const getDeviceIds = async (req, res) => {
   try {
     const adminId = req.user.uid;
-    // Find the admin with the specified _id and populate the deviceIds
     const admin = await Admin.findOne({ _id: adminId }).populate('deviceIds');
 
     if (!admin) {
       return res.status(404).json({ message: 'Admin not found' });
     }
 
-    // Extract deviceIds and associated device data from the found admin document
     const devices = admin.deviceIds || [];
-    console.log(devices);
 
-    // Retrieve the entire Device documents for the admin's device IDs
     const deviceDocuments = await Promise.all(devices.map(async (device) => {
       const deviceDocument = await Device.findOne({ deviceId: device });
 
-      // Fetch data from other schemas using currentUserId
       const currentUserId = deviceDocument.currentUserId;
 
       const environmentData = await Environment.findOne({ _id: currentUserId });
@@ -381,21 +375,35 @@ const getDeviceIds = async (req, res) => {
 
       return {
         deviceId: device,
-        deviceData: deviceDocument,
-        environmentData,
+
+        timeStamp: deviceDocument.timeStamp,
+        _id: deviceDocument._id,
+        deviceId: deviceDocument.deviceId,
+        currentUserId: deviceDocument.currentUserId,
+        currentAdminId: deviceDocument.currentAdminId,
+        heartSensor: deviceDocument.heartSensor,
+        xSensor: deviceDocument.xSensor,
+        ySensor: deviceDocument.ySensor,
+        __v: deviceDocument.__v,
+
         initialUserData,
+        environmentData,
         profileData,
       };
     }));
 
-    // Return the entire device schema data and documents for the admin's device IDs
-    return res.status(200).json({ devices: deviceDocuments });
+    const response = {
+      devices,
+      deviceDocuments,
+    };
+
+    res.json(response);
   } catch (error) {
-    logger.logToCloudWatch(formattedDate.toString(), `Error fetching deviceIds ${error}`);
     console.error(error);
-    res.status(500).json({ message: 'Error fetching device data' });
+    res.status(500).json({ message: 'Internal Server Error' });
   }
 };
+
 
 
 
