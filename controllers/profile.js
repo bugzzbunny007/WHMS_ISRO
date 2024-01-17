@@ -10,7 +10,7 @@ const formattedDate = today.toISOString().split('T')[0];
 // updateProfile
 exports.updateProfile = async (req, res) => {
 
-    const uid = "vuA6oOFtbdXk5bxtxhqCbFfRkGW2"
+    const uid = req.user.uid
     const { age, weight, gender, height } = req.body;
     console.log(req)
     console.log(req.body)
