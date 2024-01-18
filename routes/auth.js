@@ -33,6 +33,6 @@ router.get("findUserByEmail")
 
 router.get("/get-mongo-user", fetchUser, getMongoUser);
 
-router.post("/updateDeviceId", updateDeviceId);
+router.post("/updateDeviceId", fetchUser, updateDeviceId);
 
 module.exports = router;
