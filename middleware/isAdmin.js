@@ -10,13 +10,14 @@ const isAdmin = async (req, res, next) => {
       console.log(data)
       if (data) {
         if (Array.isArray(data.roles) && (data.roles.includes('admin') || data.roles.includes('superadmin'))) {
+          console.log("Above next")
           next();
         } else {
-          return res.status(401).json({ message: 'UnAuthorized' });
+          return res.status(401).json({ message: 'UnAauthorized' });
 
         }
       } else {
-        return res.status(401).json({ message: 'UnAuthorized' });
+        return res.status(404).json({ message: 'User not found' });
       }
     })
     // return res.status(401).json({ message: 'UnAuthorized' });
@@ -27,7 +28,7 @@ const isAdmin = async (req, res, next) => {
     const formattedDate = today.toISOString().split('T')[0];
     logger.logToCloudWatch(formattedDate.toString(), `isAdmin.js Internal Server Error: ${error}`);
 
-    return res.status(401).json({ message: 'Internal Server Error' });
+    return res.status(500).json({ message: 'Internal Server Error' });
   }
 };
 

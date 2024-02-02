@@ -25,6 +25,7 @@ const fetchUser = (req, res, next) => {
             console.log("Here 25")
             // Add the user object to the request for use in controllers
             req.user = decodedToken;
+            console.log(decodedToken)
             next();
         })
         .catch((error) => {

@@ -236,6 +236,7 @@ const getUserDocById = async (req, res) => {
 
 const uploadDocument = async (req, res) => {
   try {
+    console.log("Inside")
     const { originalname, buffer, mimetype } = req.file;
     const customId = req.user.uid; // pass normal id if not using token
     console.log("in upload document")
@@ -357,16 +358,18 @@ const getDeviceIds = async (req, res) => {
   try {
     const adminId = req.user.uid;
     const admin = await Admin.findOne({ _id: adminId }).populate('deviceIds');
-
+    console.log(admin)
     if (!admin) {
       return res.status(404).json({ message: 'Admin not found' });
     }
 
     const devices = admin.deviceIds || [];
-
+    // console.log()
+    const data = await Device.find();
+    console.log(data);
     const deviceDocuments = await Promise.all(devices.map(async (device) => {
       const deviceDocument = await Device.findOne({ deviceId: device });
-
+      console.log(deviceDocument)
       const currentUserId = deviceDocument.currentUserId;
 
       const environmentData = await Environment.findOne({ _id: currentUserId });

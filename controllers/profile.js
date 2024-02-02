@@ -48,7 +48,7 @@ exports.getProfile = async (req, res) => {
 
     console.log(req.user)
 
-    await Profile.findOne({ _id: req.user.user_id }).then((data) => {
+    await Profile.findOne({ _id: req.user.uid }).then((data) => {
         if (data) {
             return res.status(200).json(data)
         }

@@ -37,7 +37,7 @@ exports.updateEnvironment = async (req, res) => {
 
 
 exports.fetchEnvironment = async (req, res) => {
-    const env = await Environment.findOne({ _id: req.user.user_id }).then((data) => {
+    const env = await Environment.findOne({ _id: req.user.uid }).then((data) => {
         if (data) {
             return res.status(200).json(data)
         }

@@ -246,7 +246,9 @@ exports.forgetPassword = (req, res) => {
 exports.createMongoUserEndpoint = async (req, res) => {
   try {
     console.log("Will Create mongo user bunny");
+    console.log(req.body.name)
 
+    console.log(req.body.role)
     const createUserResult = await exports.createMongoUser({
       name: req.body.name, //firebase does not responde with displayName so used body
       email: req.user.email,
@@ -358,7 +360,7 @@ exports.getMongoUser = async (req, res) => {
     // Check if userData is still an empty object
     if (Object.keys(userData).length === 0) {
       // Return a 404 Not Found status code
-      return res.status(404).json({ error: "User data not found" });
+      return res.status(204).json({ error: "User data not found" });
     }
 
     // Return the collected data in a JSON format
