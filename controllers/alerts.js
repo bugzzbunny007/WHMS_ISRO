@@ -44,7 +44,7 @@ exports.sendAlert = async (req, res) => {
                 sensorData &&
                 sensorData[sensorTimeStamps[i]] &&
                 (sensorData[sensorTimeStamps[i]] !== "") &&
-                new Date(currentTimestamp) - new Date(sensorData[sensorTimeStamps[i]]) > 0 &&
+                new Date(currentTimestamp) - new Date(sensorData[sensorTimeStamps[i]]) <= 0 &&
                 // lastFiveAverage < sensorThresholds[i] &&
                 requestBody.alertID[i] === 1
 
