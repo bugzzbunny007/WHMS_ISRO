@@ -6,6 +6,12 @@ const sensorContent = [
     "Your Y Sensor is showing abnormal values."
 ]
 
+const sensorContentAdmin = [
+    "Heart Sensor is showing abnormal values.",
+    "X Sensor is showing abnormal values.",
+    "Y Sensor is showing abnormal values."
+]
+
 const generateMail = (name, email, subject, content) => {
     return {
         from: process.env.NODE_MAILER_USEREMAIL,
@@ -48,6 +54,23 @@ const emailAlert = (name, email, alertID, values) => {
     return generateMail(name, email, subject, content);
 };
 
+const emailAlertAdmin = (adminName, adminEmail, userName, userEmail, alertID, values) => {
+    console.log("in email alert ", adminName, adminEmail, alertID, values);
+    const subject = 'Email Alert';
+
+    // Initialize content with a default message
+    let content = `<p>This is an Email alert for ${userName}, his email is "${userEmail}".</br>User </p>`;
+
+    // Iterate through alertID and values arrays
+    for (let i = 0; i < alertID.length; i++) {
+        // Check if there is an alert for the sensor
+        if (alertID[i] === 1) {
+            content += `<p>${sensorContentAdmin[i]}</br>Its current reading is ${values[i]}</p>`;
+        }
+    }
+    return generateMail(adminName, adminEmail, subject, content);
+};
+
 const emailAlertDocumentApproved = (name, email) => {
     console.log("in emailAlertDocumentApproved alert ", name, email);
     const subject = 'Document Approved';
@@ -82,4 +105,4 @@ transportObject = () => {
     }
 };
 
-module.exports = { transportObject, emailAlert, emailAlertDocumentApproved, emailAlertDeviceAddedByUser };
+module.exports = { transportObject, emailAlert, emailAlertDocumentApproved, emailAlertDeviceAddedByUser, emailAlertAdmin };

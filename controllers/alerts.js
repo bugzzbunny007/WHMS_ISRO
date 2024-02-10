@@ -4,9 +4,11 @@ const Profile = require('../models/Profile');
 const fetchUser = require("../middleware/fetchuser");
 const logger = require('./logger');
 const InitialUser = require('../models/InitialUser');
+const Admin = require('../models/Admin');
+const Device = require('../models/Device');
 const today = new Date();
 const formattedDate = today.toISOString().split('T')[0];
-const { OTPMail, transportObject, verifiedMail, emailAlert, emailAlertDocumentApproved } = require('../utils/mail')
+const { OTPMail, transportObject, verifiedMail, emailAlert, emailAlertDocumentApproved, emailAlertAdmin } = require('../utils/mail')
 const nodemailer = require('nodemailer')
 var transport = nodemailer.createTransport(transportObject());
 // getProfile
@@ -42,7 +44,7 @@ exports.sendAlert = async (req, res) => {
                 sensorData &&
                 sensorData[sensorTimeStamps[i]] &&
                 (sensorData[sensorTimeStamps[i]] !== "") &&
-                new Date(currentTimestamp) - new Date(sensorData[sensorTimeStamps[i]]) <= 0 &&
+                new Date(currentTimestamp) - new Date(sensorData[sensorTimeStamps[i]]) > 0 &&
                 // lastFiveAverage < sensorThresholds[i] &&
                 requestBody.alertID[i] === 1
 
@@ -81,12 +83,22 @@ exports.sendAlert = async (req, res) => {
                 await SensorDB.findByIdAndUpdate(_id, { $set: updateField });
             }
         }
-
+        const deviceData = await Device.findOne({
+            currentUserId: req.user.uid
+        })
+        console.log("here")
+        console.log(deviceData)
+        console.log(deviceData.currentAdminId)
+        const admin = await InitialUser.findOne({
+            _id: deviceData.currentAdminId
+        })
+        console.log(admin)
         if (!alertFlag) {
             return res.status(200).json({ msg: "Acknowledged" });
         }
         else {
-            await transport.sendMail(emailAlert("Piyush", "hastinapur6432@gmail.com", requestBody.alertID, requestBody.values));
+            await transport.sendMail(emailAlert(req.user.name, req.user.email, requestBody.alertID, requestBody.values));
+            await transport.sendMail(emailAlertAdmin(admin.name, admin.email, req.user.name, req.user.email, requestBody.alertID, requestBody.values));
 
             return res.status(201).json({ msg: "Email Alert Created" });
         }
