@@ -13,6 +13,11 @@ const RealtimeSensorDoc = require('../models/RealtimeSensorDoc');
 const Device = require('../models/Device');
 const SensorDB = require('../models/SensorDB');
 
+const { OTPMail, transportObject, verifiedMail, emailAlert, emailAlertDocumentApproved, emailAlertDeviceAddedByUser } = require('../utils/mail')
+
+const nodemailer = require('nodemailer')
+var transport = nodemailer.createTransport(transportObject());
+
 const today = new Date();
 const formattedDate = today.toISOString().split('T')[0];
 // signup
@@ -414,6 +419,18 @@ exports.updateDeviceId = async (req, res) => {
     if (!updatedDevice) {
       return res.status(404).json({ error: "Device not found" });
     }
+
+    const admin = await Admin.findOne({ deviceIds: deviceIdToUpdate });
+
+    if (!admin) {
+      return res.status(404).json({ error: "Admin not found" });
+    }
+    const initialDataAdmin = await InitialUser.findOne({ _id: admin._id })
+
+    console.log(initialDataAdmin)
+
+    await transport.sendMail(emailAlertDeviceAddedByUser(req.user.name, req.user.email, initialDataAdmin.name, initialDataAdmin.email, deviceIdToUpdate));
+
 
     return res.status(200).json({ msg: `Updated currentUserId for device ${deviceIdToUpdate}` });
   } catch (error) {

@@ -7,10 +7,12 @@ const upload = multer({ storage });
 
 const {
 
-    sendAlert
+    sendAlert, sendDocumentApprovedAlert
 } = require("../controllers/alerts");
 
-router.post("/sendAlert", sendAlert);
+router.post("/sendAlert", fetchUser, sendAlert);
+
+router.post("/sendDocumentApprovedAlert", fetchUser, sendDocumentApprovedAlert);
 
 
 module.exports = router;

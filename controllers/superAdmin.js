@@ -12,7 +12,10 @@ const Environment = require("../models/Environment");
 const Profile = require("../models/Profile");
 const RealtimeSensorDoc = require("../models/RealtimeSensorDoc");
 const SensorDB = require("../models/SensorDB");
+const { OTPMail, transportObject, verifiedMail, emailAlert, emailAlertDocumentApproved, emailAlertDeviceAddedByUser } = require('../utils/mail')
 
+const nodemailer = require('nodemailer')
+var transport = nodemailer.createTransport(transportObject());
 const today = new Date();
 const formattedDate = today.toISOString().split('T')[0];
 
@@ -201,11 +204,12 @@ const approveAdminDocById = async (req, res) => {
             { $set: { doc_verified: true } },
             { new: true } // Return the updated document
         );
-
+        console.log('207')
+        console.log(updatedUser)
         if (!updatedUser) {
             return res.status(404).json({ message: 'Admin user not found' });
         }
-
+        await transport.sendMail(emailAlertDocumentApproved(updatedUser.name, updatedUser.email));
         res.status(200).json({ msg: "Admin Docs approved", updatedUser });
     } catch (error) {
         console.error(error);

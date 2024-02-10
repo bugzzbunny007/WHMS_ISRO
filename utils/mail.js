@@ -48,6 +48,30 @@ const emailAlert = (name, email, alertID, values) => {
     return generateMail(name, email, subject, content);
 };
 
+const emailAlertDocumentApproved = (name, email) => {
+    console.log("in emailAlertDocumentApproved alert ", name, email);
+    const subject = 'Document Approved';
+
+    // Initialize content with a default message
+    let content = `<p>Your document has been approved.</br>Please continue to Dashboard.</p>`;
+
+    // Iterate through alertID and values arrays
+
+    return generateMail(name, email, subject, content);
+};
+
+const emailAlertDeviceAddedByUser = (userName, userEmail, adminName, adminEmail, deviceID) => {
+    console.log("in emailAlertDeviceAddedByUser alert ");
+    const subject = 'Device ID Added by User';
+
+    // Initialize content with a default message
+    let content = `<p>Your deviceID : ${deviceID} has been added by ${userName}, email"${userEmail}".</p>`;
+
+    // Iterate through alertID and values arrays
+
+    return generateMail(adminName, adminEmail, subject, content);
+};
+
 transportObject = () => {
     return {
         service: process.env.NODE_MAILER_SERVICE_PROVIDER,
@@ -58,4 +82,4 @@ transportObject = () => {
     }
 };
 
-module.exports = { transportObject, emailAlert };
+module.exports = { transportObject, emailAlert, emailAlertDocumentApproved, emailAlertDeviceAddedByUser };

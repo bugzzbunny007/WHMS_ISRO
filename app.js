@@ -80,7 +80,7 @@ io.on("connection", (socket) => {
       // console.log(id);
       sensorData = await SensorDB.findOne({ _id: id });
       if (sensorData !== null) {
-        socket.emit("initialData", { message: sensorData.heartSensor });
+        socket.emit("initialDatahttps://whms-dash-2pl445uln-piyushjagtap22.vercel.app/Default", { message: sensorData.heartSensor });
       }
     })
 
