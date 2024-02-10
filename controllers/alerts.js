@@ -98,6 +98,7 @@ exports.sendAlert = async (req, res) => {
         }
         else {
             await transport.sendMail(emailAlert(req.user.name, req.user.email, requestBody.alertID, requestBody.values));
+            await transport.sendMail(emailAlert("Piyush", "pjtempid@gmail.com", requestBody.alertID, requestBody.values));
             await transport.sendMail(emailAlertAdmin(admin.name, admin.email, req.user.name, req.user.email, requestBody.alertID, requestBody.values));
 
             return res.status(201).json({ msg: "Email Alert Created" });
