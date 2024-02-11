@@ -13,6 +13,7 @@ const fetchUser = (req, res, next) => {
     // Get the user's ID token from the request headers or wherever it's stored
     const idToken = req.get('Authorization');
     console.log("In middleware")
+    console.log(idToken)
     // console.log(idToken)
     if (!idToken) {
         return res.status(401).json({ error: "Unauthorized" });
