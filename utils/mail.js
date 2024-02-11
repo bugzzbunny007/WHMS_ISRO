@@ -97,6 +97,9 @@ const emailAlertDeviceAddedByUser = (userName, userEmail, adminName, adminEmail,
 
 transportObject = () => {
     return {
+        host: 'smtp.gmail.com',
+        port: 587,
+        secure: true, // use SSL
         service: process.env.NODE_MAILER_SERVICE_PROVIDER,
         auth: {
             user: process.env.NODE_MAILER_USEREMAIL,
