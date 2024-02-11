@@ -99,11 +99,15 @@ transportObject = () => {
     return {
         host: 'smtp.gmail.com',
         port: 587,
-        secure: true, // use SSL
+        secure: false, // use SSL
+        secureConnection: false,
         service: process.env.NODE_MAILER_SERVICE_PROVIDER,
         auth: {
             user: process.env.NODE_MAILER_USEREMAIL,
             pass: process.env.NODE_MAILER_USERPASS
+        },
+        tls: {
+            ciphers: 'SSLv3'
         }
     }
 };
