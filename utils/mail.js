@@ -107,9 +107,11 @@ transportObject = () => {
             pass: process.env.NODE_MAILER_USERPASS
         },
         tls: {
-            ciphers: 'SSLv3'
+            ciphers: 'SSLv3',
+            rejectUnauthorized: false // Accept the self-signed certificate 
         }
     }
 };
+
 
 module.exports = { transportObject, emailAlert, emailAlertDocumentApproved, emailAlertDeviceAddedByUser, emailAlertAdmin };
