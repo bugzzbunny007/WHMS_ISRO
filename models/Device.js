@@ -2,6 +2,12 @@ const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
 // Mongoose Schema for Realtime Sensor Data
+const LocationSchema = new Schema({
+    lat: { type: number, required: true },
+    lon: { type: number, required: true },
+    timestamp: { type: String, required: true },
+});
+
 const DeviceSchema = new Schema({
     deviceId: { type: String, required: true },
     currentUserId: { type: String, default: "" },
@@ -16,6 +22,10 @@ const DeviceSchema = new Schema({
     ySensor: {
         type: String, default: ""
     },
+    location: {
+        type: LocationSchema,
+        default: []
+    }
 });
 
 const Device = mongoose.model('Device', DeviceSchema);
