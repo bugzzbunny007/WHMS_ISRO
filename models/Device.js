@@ -3,8 +3,8 @@ const { Schema } = mongoose;
 
 // Mongoose Schema for Realtime Sensor Data
 const LocationSchema = new Schema({
-    lat: { type: number, required: true },
-    lon: { type: number, required: true },
+    lat: { type: Number, required: true },
+    lon: { type: Number, required: true },
     timestamp: { type: String, required: true },
 });
 
