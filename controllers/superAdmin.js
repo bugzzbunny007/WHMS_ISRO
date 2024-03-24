@@ -281,8 +281,23 @@ const addDeviceIdToAdmin = async (req, res) => {
             currentAdminId: adminId,
         }));
 
-        // Insert the new devices into the Device collection
-        await Device.insertMany(newDevices);
+        // Insert the new devices into the Device collection and get their inserted IDs
+        const insertResult = await Device.insertMany(newDevices);
+        const insertedDeviceIds = insertResult.map(doc => doc._id);
+
+        // Update the newly created devices with location data
+        await Device.updateMany(
+            { _id: { $in: insertedDeviceIds } },
+            {
+                $push: {
+                    location: {
+                        lat: 0,
+                        lon: 0,
+                        timestamp: ""
+                    }
+                }
+            }
+        );
 
         // Update the Admin document with the new deviceIds
         const updatedAdmin = await Admin.findByIdAndUpdate(
@@ -314,6 +329,7 @@ const addDeviceIdToAdmin = async (req, res) => {
         return res.status(500).json({ message: 'Error adding device IDs', error: error.message });
     }
 };
+
 
 
 const removeDeviceIdFromAdmin = async (req, res) => {
