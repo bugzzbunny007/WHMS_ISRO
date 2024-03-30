@@ -10,6 +10,7 @@ const logger = require('./logger');
 const UserDocument = require('../models/UserDocument');
 const { GridFSBucket } = require('mongodb');
 const { Readable } = require('stream');
+const SensorDB = require("../models/SensorDB");
 
 const today = new Date();
 const formattedDate = today.toISOString().split('T')[0];
@@ -385,8 +386,14 @@ const getDeviceIds = async (req, res) => {
         currentUserId: deviceDocument.currentUserId,
         currentAdminId: deviceDocument.currentAdminId,
         heartSensor: deviceDocument.heartSensor,
-        xSensor: deviceDocument.xSensor,
-        ySensor: deviceDocument.ySensor,
+        BreathRateSensor: deviceDocument.BreathRateSensor,
+        VentilatonSensor: deviceDocument.VentilatonSensor,
+        TidalVolumeSensor: deviceDocument.TidalVolumeSensor,
+        ActivitySensor: deviceDocument.ActivitySensor,
+        CadenceSensor: deviceDocument.CadenceSensor,
+        TemperatureSensor: deviceDocument.TemperatureSensor,
+        OxygenSaturationSensor: deviceDocument.OxygenSaturationSensor,
+        BloodPressureSensor: deviceDocument.BloodPressureSensor,
         __v: deviceDocument.__v,
 
         initialUserData,
@@ -447,7 +454,25 @@ const getDeviceData = async (req, res) => {
 };
 
 
+const getSensorDB = async (req, res) => {
+  try {
+    const id = req.body.id;
+    console.log(id)
+
+    const SensorDBData = await SensorDB.findOne({ _id: id });
+
+    if (!SensorDBData) {
+      return res.status(404).json({ message: 'Data not found' });
+    }
+
+    return res.status(200).json(SensorDBData);
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ message: 'Internal Server Error', error: err });
+  }
+};
+
 
 module.exports = {
-  addUserToAdmin, removeUserFromAdmin, getUnallocatedUsers, getAdminUsers, getUserDocById, getDeviceIds, getImageByToken, uploadDocument, getDeviceData,
+  addUserToAdmin, removeUserFromAdmin, getUnallocatedUsers, getAdminUsers, getUserDocById, getDeviceIds, getImageByToken, uploadDocument, getDeviceData, getSensorDB
 };

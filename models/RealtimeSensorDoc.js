@@ -10,19 +10,48 @@ const RealtimeSensorDocSchema = new Schema({
         unit: String,
         range: String,
     },
-    xSensor: {
+    BreathRateSensor: {
         value: Number,
         timestamp: String,
         unit: String,
         range: String,
     },
-    ySensor: {
+    TidalVolumeSensor: {
         value: Number,
         timestamp: String,
         unit: String,
         range: String,
     },
-
+    ActivitySensor: {
+        value: Number,
+        timestamp: String,
+        unit: String,
+        range: String,
+    },
+    CadenceSensor: {
+        value: Number,
+        timestamp: String,
+        unit: String,
+        range: String,
+    },
+    TemperatureSensor: {
+        value: Number,
+        timestamp: String,
+        unit: String,
+        range: String,
+    },
+    OxygenSaturationSensor: {
+        value: Number,
+        timestamp: String,
+        unit: String,
+        range: String,
+    },
+    BloodPressureSensor: {
+        value: Number,
+        timestamp: String,
+        unit: String,
+        range: String,
+    }
 });
 const RealtimeSensorDoc = mongoose.model('RealtimeSensorDoc', RealtimeSensorDocSchema);
 

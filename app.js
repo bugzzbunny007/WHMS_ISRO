@@ -66,34 +66,34 @@ const server = app.listen(port, () => {
 });
 
 
-const io = require('socket.io')(server, {
-  cors: {
-    origin: "http://localhost:5173"
-  },
-});
-let sensorData;
-io.on("connection", (socket) => {
-  try {
-    console.log("Connected to socket");
-    socket.on("setup", async (id) => {
-      socket.join(id);
-      // console.log(id);
-      sensorData = await SensorDB.findOne({ _id: id });
-      if (sensorData !== null) {
-        socket.emit("initialDatahttps://whms-dash-2pl445uln-piyushjagtap22.vercel.app/Default", { message: sensorData.heartSensor });
-      }
-    })
+// const io = require('socket.io')(server, {
+//   cors: {
+//     origin: "http://localhost:5173"
+//   },
+// });
+// let sensorData;
+// io.on("connection", (socket) => {
+//   try {
+//     console.log("Connected to socket");
+//     socket.on("setup", async (id) => {
+//       socket.join(id);
+//       // console.log(id);
+//       sensorData = await SensorDB.findOne({ _id: id });
+//       if (sensorData !== null) {
+//         socket.emit("initialDatahttps://whms-dash-2pl445uln-piyushjagtap22.vercel.app/Default", { message: sensorData.heartSensor });
+//       }
+//     })
 
-    const changeStream = SensorDB.watch();
+//     const changeStream = SensorDB.watch();
 
-    changeStream.on("change", async (change) => {
-      // console.log("Change detected in MongoDB collection:", change.documentKey._id);
-      // Emit the changed data to all connected clients
-      sensorData = await SensorDB.findOne({ _id: change.documentKey._id });
-      // console.log(sensorData);
-      io.emit("dataChange", { message: "Data change detected", data: sensorData });
-    });
-  } catch (err) {
-    console.log(err)
-  }
-});
+//     changeStream.on("change", async (change) => {
+//       // console.log("Change detected in MongoDB collection:", change.documentKey._id);
+//       // Emit the changed data to all connected clients
+//       sensorData = await SensorDB.findOne({ _id: change.documentKey._id });
+//       // console.log(sensorData);
+//       io.emit("dataChange", { message: "Data change detected", data: sensorData });
+//     });
+//   } catch (err) {
+//     console.log(err)
+//   }
+// });

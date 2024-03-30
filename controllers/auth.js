@@ -270,8 +270,16 @@ exports.createMongoUserEndpoint = async (req, res) => {
       const sensorData = {
         _id: req.user.uid,
         heartSensor: { value: 0, timestamp: '0', unit: '', range: '' }, // Modify this based on your requirements
-        xSensor: { value: 0, timestamp: '0', unit: '', range: '' },
-        ySensor: { value: 0, timestamp: '0', unit: '', range: '' },
+        BreathRateSensor: { value: 0, timestamp: '0', unit: '', range: '' },
+        VentilatonSensor: { value: 0, timestamp: '0', unit: '', range: '' },
+        TidalVolumeSensor: { value: 0, timestamp: '0', unit: '', range: '' },
+        ActivitySensor: { value: 0, timestamp: '0', unit: '', range: '' },
+        CadenceSensor: { value: 0, timestamp: '0', unit: '', range: '' },
+        TemperatureSensor: { value: 0, timestamp: '0', unit: '', range: '' },
+        OxygenSaturationSensor: { value: 0, timestamp: '0', unit: '', range: '' },
+        BloodPressureSensor: { value: 0, timestamp: '0', unit: '', range: '' },
+        location: { lat: 0, lon: 0, timestamp: '' },
+
       };
 
       await exports.createSensorDocs(sensorData);
@@ -388,8 +396,15 @@ exports.createSensorDocs = async (sensorData) => {
     const newSensorDB = new SensorDB({
       _id: sensorData._id,
       heartSensor: sensorData.heartSensor,
-      xSensor: sensorData.xSensor,
-      ySensor: sensorData.ySensor,
+      BreathRateSensor: sensorData.BreathRateSensor,
+      VentilatonSensor: sensorData.VentilatonSensor,
+      TidalVolumeSensor: sensorData.TidalVolumeSensor,
+      ActivitySensor: sensorData.ActivitySensor,
+      CadenceSensor: sensorData.CadenceSensor,
+      TemperatureSensor: sensorData.TemperatureSensor,
+      OxygenSaturationSensor: sensorData.OxygenSaturationSensor,
+      BloodPressureSensor: sensorData.BloodPressureSensor,
+      location: sensorData.location,
     });
     await newSensorDB.save();
 

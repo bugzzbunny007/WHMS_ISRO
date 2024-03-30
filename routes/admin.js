@@ -5,7 +5,7 @@ const isAdmin = require("../middleware/isAdmin");
 const multer = require('multer');
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
-const { addUserToAdmin, removeUserFromAdmin, getUnallocatedUsers, getAdminUsers, getUserDocById, getDeviceIds, uploadDocument, getImageByToken, getDeviceData } = require("../controllers/admin");
+const { addUserToAdmin, removeUserFromAdmin, getUnallocatedUsers, getAdminUsers, getUserDocById, getDeviceIds, uploadDocument, getImageByToken, getDeviceData, getSensorDB } = require("../controllers/admin");
 
 // Define a POST route to create an admin user
 
@@ -26,5 +26,7 @@ router.post("/uploadDocument", fetchUser, isAdmin, upload.single('file'), upload
 router.get("/getUserDocImage", fetchUser, isAdmin, getImageByToken);// to do add validation
 
 router.post("/getDeviceData", getDeviceData);// to do add validation
+
+router.post("/getSensordb", fetchUser, isAdmin, getSensorDB);// to do add validation
 
 module.exports = router;

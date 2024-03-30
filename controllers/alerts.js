@@ -26,12 +26,12 @@ exports.sendAlert = async (req, res) => {
         // Add 5 minutes to currentTimestamp
 
 
-        const sensorTimeStamps = ["heartSensorAlertTimeStamp", "xSensorAlertTimeStamp", "ySensorAlertTimeStamp"]
+        const sensorTimeStamps = ["heartSensorAlertTimeStamp", "BreathRateSensorAlertTimeStamp", "VentilatonSensorAlertTimeStamp"]
         const sensorThresholds = ["60", "60", "60"]
 
         // Iterate through sensors and update alertID based on timestamp
         for (let i = 0; i < requestBody.alertID.length; i++) {
-            const sensorType = i === 0 ? 'heartSensor' : (i === 1 ? 'xSensor' : 'ySensor');
+            const sensorType = i === 0 ? 'heartSensor' : (i === 1 ? 'BreathRateSensor' : 'VentilatonSensor');
 
             // Check if the timestamp is not null and older than 5 minutes
             const sensorData = await SensorDB.findById(_id);

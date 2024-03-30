@@ -16,10 +16,28 @@ const DeviceSchema = new Schema({
     heartSensor: {
         type: String, default: ""
     },
-    xSensor: {
+    BreathRateSensor: {
         type: String, default: ""
     },
-    ySensor: {
+    VentilatonSensor: {
+        type: String, default: ""
+    },
+    TidalVolumeSensor: {
+        type: String, default: ""
+    },
+    ActivitySensor: {
+        type: String, default: ""
+    },
+    CadenceSensor: {
+        type: String, default: ""
+    },
+    TemperatureSensor: {
+        type: String, default: ""
+    },
+    OxygenSaturationSensor: {
+        type: String, default: ""
+    },
+    BloodPressureSensor: {
         type: String, default: ""
     },
     location: {
