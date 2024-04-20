@@ -2,14 +2,26 @@ require("dotenv").config();
 
 const sensorContent = [
     "Your Heart Sensor is showing abnormal values.",
-    "Your X Sensor is showing abnormal values.",
-    "Your Y Sensor is showing abnormal values."
+    "Your Breath Rate Sensor is showing abnormal values.",
+    "Your Ventilation Sensor is showing abnormal values.",
+    "Your Tidal Volume Sensor is showing abnormal values.",
+    "Your Activity Sensor is showing abnormal values.",
+    "Your Cadence Sensor is showing abnormal values.",
+    "Your Temperature Sensor is showing abnormal values.",
+    "Your Oxygen Saturation Sensor is showing abnormal values.",
+    "Your Blood Pressure Sensor is showing abnormal values."
 ]
 
 const sensorContentAdmin = [
-    "Heart Sensor is showing abnormal values.",
-    "X Sensor is showing abnormal values.",
-    "Y Sensor is showing abnormal values."
+    "Your Heart Sensor is showing abnormal values.",
+    "Your Breath Rate Sensor is showing abnormal values.",
+    "Your Ventilation Sensor is showing abnormal values.",
+    "Your Tidal Volume Sensor is showing abnormal values.",
+    "Your Activity Sensor is showing abnormal values.",
+    "Your Cadence Sensor is showing abnormal values.",
+    "Your Temperature Sensor is showing abnormal values.",
+    "Your Oxygen Saturation Sensor is showing abnormal values.",
+    "Your Blood Pressure Sensor is showing abnormal values."
 ]
 
 const generateMail = (name, email, subject, content) => {

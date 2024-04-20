@@ -26,8 +26,8 @@ exports.sendAlert = async (req, res) => {
         // Add 5 minutes to currentTimestamp
 
 
-        const sensorTimeStamps = ["heartSensorAlertTimeStamp", "BreathRateSensorAlertTimeStamp", "VentilatonSensorAlertTimeStamp"]
-        const sensorThresholds = ["60", "60", "60"]
+        const sensorTimeStamps = ["heartSensorAlertTimeStamp", "BreathRateSensorAlertTimeStamp", "VentilatonSensorAlertTimeStamp", "TidalVolumeSensorAlertTimeStamp", "ActivitySensorAlertTimeStamp", "CadenceSensorAlertTimeStamp", "TemperatureSensorAlertTimeStamp", "OxygenSaturationSensorAlertTimeStamp", "BloodPressureSensorAlertTimeStamp"]
+        const sensorThresholds = ["60", "60", "60", "60", "60", "60", "60", "60", "60"]
 
         // Iterate through sensors and update alertID based on timestamp
         for (let i = 0; i < requestBody.alertID.length; i++) {
@@ -62,7 +62,7 @@ exports.sendAlert = async (req, res) => {
         }
 
         const currentTimeStamp2 = new Date();
-        currentTimeStamp2.setMinutes(currentTimeStamp2.getMinutes() + 5);
+        currentTimeStamp2.setMinutes(currentTimeStamp2.getMinutes() + 1);
 
         // Convert the updated timestamp to ISO string
         const updatedTimestamp = currentTimeStamp2.toISOString();

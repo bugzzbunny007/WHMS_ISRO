@@ -394,6 +394,7 @@ const getDeviceIds = async (req, res) => {
         TemperatureSensor: deviceDocument.TemperatureSensor,
         OxygenSaturationSensor: deviceDocument.OxygenSaturationSensor,
         BloodPressureSensor: deviceDocument.BloodPressureSensor,
+        location: deviceDocument.location,
         __v: deviceDocument.__v,
 
         initialUserData,
@@ -421,7 +422,7 @@ const getDeviceData = async (req, res) => {
   try {
     const deviceId = req.body.deviceId;
     const deviceData = await Device.findOne({ deviceId: deviceId });
-
+    console.log("in get device data")
     if (!deviceData) {
       return res.status(404).json({ message: 'Device not found' });
     }
@@ -445,7 +446,7 @@ const getDeviceData = async (req, res) => {
       initialUserData,
       profileData,
     };
-
+    console.log(responseData)
     return res.status(200).json(responseData);
   } catch (err) {
     console.log(err);
@@ -458,6 +459,7 @@ const getSensorDB = async (req, res) => {
   try {
     const id = req.body.id;
     console.log(id)
+    console.log("in get Sensor DB")
 
     const SensorDBData = await SensorDB.findOne({ _id: id });
 
@@ -472,7 +474,81 @@ const getSensorDB = async (req, res) => {
   }
 };
 
+const getLocation = async (req, res) => {
+  try {
+    const id = req.body.currentUserId;
+
+
+    const DeviceData = await Device.findOne({ currentUserId: id });
+
+    if (!DeviceData) {
+      return res.status(404).json({ message: 'Data not found' });
+    }
+    return res.status(200).json(DeviceData.location);
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ message: 'Internal Server Error', error: err });
+  }
+};
+
+const getGraphData = async (req, res) => {
+  try {
+    // this endpoint takes if for sensorDB and startTimeStamp and endTimeStamp,
+    // finds all data points available between that, and returns the data 
+    // timestamp in unix epoch time
+    function filterTimestampsInRange(sensorData, sensorType, startTimeStamp, endTimeStamp) {
+      const filteredTimestamps = sensorData[sensorType].filter(dataPoint => {
+        const dataPointTimestamp = new Date(dataPoint.timestamp).getTime();
+        return dataPointTimestamp >= startTimeStamp && dataPointTimestamp <= endTimeStamp;
+      });
+
+      return filteredTimestamps; // An array containing objects with qualifying timestamps
+    }
+
+    console.log(req.body)
+
+    const startTimeStamp = req.body.startTimeStamp;
+    const endTimeStamp = req.body.endTimeStamp;
+    const sensorType = req.body.sensorType;
+
+
+    // Input Validation
+    if (!sensorType) {
+      return res.status(400).json({ message: 'Sensor type is required' });
+    }
+
+    if (startTimeStamp >= endTimeStamp) {
+      return res.status(400).json({ message: 'Start time must be before end time' });
+    }
+
+    // Check if startTime is in the past
+    const now = new Date().getTime();
+    if (startTimeStamp > now) {
+      return res.status(400).json({
+        message: 'Start time cannot be in the future',
+        requiredAccessCode
+      });
+    }
+
+    console.log(new Date().getTime())
+    const SensorData = await SensorDB.findOne({ _id: req.body.id });
+    if (!SensorData) {
+      return res.status(404).json({ message: 'Data not found' });
+    }
+
+
+    const filteredTimestamps = filterTimestampsInRange(SensorData, sensorType, startTimeStamp, endTimeStamp);
+    console.log(filteredTimestamps.length)
+    // console.log(SensorData["BloodPressureSensor"][100]["timestamp"])
+
+    return res.status(200).json(filteredTimestamps);
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ message: 'Internal Server Error', error: err });
+  }
+};
+
 
 module.exports = {
-  addUserToAdmin, removeUserFromAdmin, getUnallocatedUsers, getAdminUsers, getUserDocById, getDeviceIds, getImageByToken, uploadDocument, getDeviceData, getSensorDB
+  addUserToAdmin, removeUserFromAdmin, getUnallocatedUsers, getAdminUsers, getUserDocById, getDeviceIds, getImageByToken, uploadDocument, getDeviceData, getSensorDB, getLocation, getGraphData
 };
