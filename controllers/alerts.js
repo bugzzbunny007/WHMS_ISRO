@@ -62,7 +62,7 @@ exports.sendAlert = async (req, res) => {
         }
 
         const currentTimeStamp2 = new Date();
-        currentTimeStamp2.setMinutes(currentTimeStamp2.getMinutes() + 1);
+        currentTimeStamp2.setMinutes(currentTimeStamp2.getMinutes() + 5); // update this for email alert delays
 
         // Convert the updated timestamp to ISO string
         const updatedTimestamp = currentTimeStamp2.toISOString();
