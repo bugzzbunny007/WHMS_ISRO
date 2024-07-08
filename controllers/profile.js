@@ -3,9 +3,14 @@ const User = require('../models/User');
 const Profile = require('../models/Profile');
 const fetchUser = require("../middleware/fetchuser");
 const logger = require('./logger');
+
+var mongoose = require('mongoose');
 const InitialUser = require('../models/InitialUser');
 const today = new Date();
 const formattedDate = today.toISOString().split('T')[0];
+const UserDocument = require('../models/UserDocument');
+const { GridFSBucket } = require('mongodb');
+const { Readable } = require('stream');
 
 // updateProfile
 exports.updateProfile = async (req, res) => {
@@ -58,4 +63,110 @@ exports.getProfile = async (req, res) => {
     }).catch((err) => {
         return res.status(500).json(err)
     });
+};
+
+exports.uploadDocument = async (req, res) => {
+    try {
+        const { originalname, buffer, mimetype } = req.file;
+        const customId = req.user.uid; // Assuming you're using UID from token
+        const deptName = req.body.deptName; // Extract deptName from request body
+        const orgName = req.body.orgName; // Extract deptName from request body
+
+        console.log(deptName)
+        const db = mongoose.connection.db;
+        const bucket = new GridFSBucket(db, { bucketName: 'userdocuments' });
+
+        // Find the existing document with the given _id
+        const existingDocument = await UserDocument.findOne({ _id: customId });
+
+        // Update or create user document
+        if (existingDocument) {
+            const updateResult = await UserDocument.findOneAndUpdate(
+                { _id: customId },
+                {
+                    originalname: originalname,
+                    filename: `${customId}_${originalname}`,
+                    contentType: mimetype,
+                },
+                { new: true } // Return the updated document
+            );
+
+            const uploadStream = bucket.openUploadStream(updateResult.filename, {
+                contentType: mimetype,
+            });
+
+            const bufferStream = new Readable();
+            bufferStream.push(buffer);
+            bufferStream.push(null);
+
+            bufferStream.pipe(uploadStream);
+
+            // Update deptName field in InitialUser model
+            const updatedDocUploadedField = await InitialUser.findOneAndUpdate(
+                { _id: customId },
+                {
+                    $set: {
+                        doc_uploaded: true,
+                        deptName: deptName,// Update deptName field,
+                        orgName: orgName
+                    }
+                },
+                { new: true } // Return the updated document
+            );
+
+            uploadStream.on('finish', () => {
+                return res.json({ message: 'File uploaded successfully' });
+            });
+        } else {
+            const bufferStream = new Readable();
+            bufferStream.push(buffer);
+            bufferStream.push(null);
+
+            const userDocument = new UserDocument({
+                _id: customId,
+                originalname: originalname,
+                filename: `${customId}_${originalname}`,
+                contentType: mimetype,
+            });
+
+            await userDocument.save();
+
+            const uploadStream = bucket.openUploadStream(userDocument.filename, {
+                contentType: mimetype,
+            });
+
+            bufferStream.pipe(uploadStream);
+
+            // Update deptName field in InitialUser model
+            const updatedDocUploadedField = await InitialUser.findOneAndUpdate(
+                { _id: customId },
+                {
+                    $set: {
+                        doc_uploaded: true,
+                        deptName: deptName // Update deptName field
+                    }
+                },
+                { new: true } // Return the updated document
+            );
+
+            uploadStream.on('finish', () => {
+                return res.json({ message: 'File uploaded successfully' });
+            });
+        }
+    } catch (err) {
+        console.log(err);
+
+        if (err.code === 11000) {
+            return res
+                .status(409)
+                .json({
+                    message:
+                        'Duplicate key error. Document with the specified _id already exists.',
+                });
+        }
+
+        return res
+            .status(400)
+            .json({ message: 'Error uploading file', error: err });
+    }
 };

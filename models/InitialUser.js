@@ -15,6 +15,8 @@ const InitialUserSchema = new Schema({
     env_exist: { type: Boolean, default: false },
     doc_verified: { type: Boolean, default: false },
     doc_uploaded: { type: Boolean, default: false },
+    deptName: { type: String },
+    orgName: { type: String }
 
 });
 

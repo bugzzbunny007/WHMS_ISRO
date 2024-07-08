@@ -235,97 +235,6 @@ const getUserDocById = async (req, res) => {
   }
 }
 
-const uploadDocument = async (req, res) => {
-  try {
-    console.log("Inside")
-    const { originalname, buffer, mimetype } = req.file;
-    const customId = req.user.uid; // pass normal id if not using token
-    console.log("in upload document")
-    console.log(customId);
-
-    const db = mongoose.connection.db;
-    const bucket = new GridFSBucket(db, { bucketName: 'userdocuments' });
-
-    // Find the existing document with the given _id
-    const existingDocument = await UserDocument.findOne({ _id: customId });
-
-    // If a document with the given _id already exists, update it
-    if (existingDocument) {
-      const updateResult = await UserDocument.findOneAndUpdate(
-        { _id: customId },
-        {
-          originalname: originalname,
-          filename: `${customId}_${originalname}`,
-          contentType: mimetype,
-        },
-        { new: true } // Return the updated document
-      );
-
-      const uploadStream = bucket.openUploadStream(updateResult.filename, {
-        contentType: mimetype,
-      });
-
-      const bufferStream = new Readable();
-      bufferStream.push(buffer);
-      bufferStream.push(null);
-
-      bufferStream.pipe(uploadStream);
-      const updatedDocUploadedField = await InitialUser.findOneAndUpdate(
-        { _id: customId },
-        { $set: { doc_uploaded: true } },
-        { new: true } // Return the updated document
-      );
-
-      uploadStream.on('finish', () => {
-        return res.json({ message: 'File uploaded successfully' });
-      });
-    } else {
-      // If the document with the given _id doesn't exist, create a new one
-      const bufferStream = new Readable();
-      bufferStream.push(buffer);
-      bufferStream.push(null);
-
-      const userDocument = new UserDocument({
-        _id: customId,
-        originalname: originalname,
-        filename: `${customId}_${originalname}`,
-        contentType: mimetype,
-      });
-
-      await userDocument.save();
-
-      const uploadStream = bucket.openUploadStream(userDocument.filename, {
-        contentType: mimetype,
-      });
-
-      bufferStream.pipe(uploadStream);
-      const updatedDocUploadedField = await InitialUser.findOneAndUpdate(
-        { _id: customId },
-        { $set: { doc_uploaded: true } },
-        { new: true } // Return the updated document
-      );
-      uploadStream.on('finish', () => {
-        return res.json({ message: 'File uploaded successfully' });
-      });
-    }
-  } catch (err) {
-    console.log(err);
-
-    if (err.code === 11000) {
-      return res
-        .status(409)
-        .json({
-          message:
-            'Duplicate key error. Document with the specified _id already exists.',
-        });
-    }
-
-    return res
-      .status(400)
-      .json({ message: 'Error uploading file', error: err });
-  }
-};
-
 const getImageByToken = async (req, res) => {
   try {
     const userId = req.user.uid;
@@ -550,5 +459,5 @@ const getGraphData = async (req, res) => {
 
 
 module.exports = {
-  addUserToAdmin, removeUserFromAdmin, getUnallocatedUsers, getAdminUsers, getUserDocById, getDeviceIds, getImageByToken, uploadDocument, getDeviceData, getSensorDB, getLocation, getGraphData
+  addUserToAdmin, removeUserFromAdmin, getUnallocatedUsers, getAdminUsers, getUserDocById, getDeviceIds, getImageByToken, getDeviceData, getSensorDB, getLocation, getGraphData
 };
