@@ -278,6 +278,7 @@ exports.createMongoUserEndpoint = async (req, res) => {
         TemperatureSensor: { value: 0, timestamp: '0', unit: '', range: '' },
         OxygenSaturationSensor: { value: 0, timestamp: '0', unit: '', range: '' },
         BloodPressureSensor: { value: 0, timestamp: '0', unit: '', range: '' },
+
         location: { lat: 0, lon: 0, timestamp: '' },
 
       };

@@ -405,21 +405,52 @@ const getGraphData = async (req, res) => {
     // this endpoint takes if for sensorDB and startTimeStamp and endTimeStamp,
     // finds all data points available between that, and returns the data 
     // timestamp in unix epoch time
-    function filterTimestampsInRange(sensorData, sensorType, startTimeStamp, endTimeStamp) {
-      const filteredTimestamps = sensorData[sensorType].filter(dataPoint => {
-        const dataPointTimestamp = new Date(dataPoint.timestamp).getTime();
-        return dataPointTimestamp >= startTimeStamp && dataPointTimestamp <= endTimeStamp;
+    function convertToTimestamp(dateTimeString) {
+      if (!dateTimeString && dateTimeString !== 0) {
+        throw new Error('dateTimeString is undefined or null');
+      }
+
+      if (dateTimeString === 0) {
+        return 0;
+      }
+
+      // Create a new Date object from the dateTimeString
+      const dateObj = new Date(dateTimeString);
+
+      // Return the Unix epoch time in milliseconds
+      return dateObj.getTime();
+    }
+
+
+
+    function filterDataInRange(sensorData, sensorType, startTimeStamp, endTimeStamp) {
+      const filteredData = sensorData[sensorType].filter(dataPoint => {
+        const dataPointTimestamp = dataPoint.timestamp;
+
+        try {
+          const timestamp = convertToTimestamp(dataPointTimestamp);
+          console.log(`Data point timestamp: ${dataPointTimestamp}, Timestamp: ${timestamp}`);
+          return timestamp >= startTimeStamp && timestamp <= endTimeStamp;
+        } catch (error) {
+          console.error(`Error converting timestamp: ${dataPointTimestamp}`, error);
+          return false; // Filter out data points with invalid timestamps
+        }
       });
 
-      return filteredTimestamps; // An array containing objects with qualifying timestamps
+      console.log(`Filtered data length: ${filteredData.length}`);
+      return filteredData;
     }
+
+
+
+
 
     console.log(req.body)
 
     const startTimeStamp = req.body.startTimeStamp;
     const endTimeStamp = req.body.endTimeStamp;
     const sensorType = req.body.sensorType;
-
+    console.log(startTimeStamp, endTimeStamp)
 
     // Input Validation
     if (!sensorType) {
@@ -446,7 +477,7 @@ const getGraphData = async (req, res) => {
     }
 
 
-    const filteredTimestamps = filterTimestampsInRange(SensorData, sensorType, startTimeStamp, endTimeStamp);
+    const filteredTimestamps = filterDataInRange(SensorData, sensorType, startTimeStamp, endTimeStamp);
     console.log(filteredTimestamps.length)
     // console.log(SensorData["BloodPressureSensor"][100]["timestamp"])
 
