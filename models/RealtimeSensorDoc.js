@@ -51,6 +51,12 @@ const RealtimeSensorDocSchema = new Schema({
         timestamp: String,
         unit: String,
         range: String,
+    },
+    location: {
+        value: Number,
+        timestamp: String,
+        unit: String,
+        range: String,
     }
 });
 const RealtimeSensorDoc = mongoose.model('RealtimeSensorDoc', RealtimeSensorDocSchema);

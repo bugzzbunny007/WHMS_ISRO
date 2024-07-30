@@ -37,6 +37,7 @@ const SensorDBSchema = new Schema({
     TemperatureSensorAlertTimeStamp: { type: String, default: "" },
     OxygenSaturationSensorAlertTimeStamp: { type: String, default: "" },
     BloodPressureSensorAlertTimeStamp: { type: String, default: "" },
+    location: { type: Number, default: ""},
     maxRecordSize: { type: Number, default: 60 }, // Set your desired max size here
 });
 
