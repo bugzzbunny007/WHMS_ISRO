@@ -11,9 +11,17 @@ const UserDocument = require('../models/UserDocument');
 const { GridFSBucket } = require('mongodb');
 const { Readable } = require('stream');
 const SensorDB = require("../models/SensorDB");
+const nodemailer = require('nodemailer'); 
 
+
+const path = require('path');
 const today = new Date();
 const formattedDate = today.toISOString().split('T')[0];
+
+const axios = require('axios');
+const PDFDocument = require('pdfkit');
+const fs = require('fs');
+
 const addUserToAdmin = async (req, res) => {
   try {
 
@@ -400,6 +408,28 @@ const getLocation = async (req, res) => {
   }
 };
 
+
+// we can this function into getGraphdata also but it needs 
+async function fetchGraphData(id, sensorType, startTimeStamp, endTimeStamp) {
+  function filterTimestampsInRange(sensorData, sensorType, startTimeStamp, endTimeStamp) {
+    const filteredTimestamps = sensorData[sensorType].filter(dataPoint => {
+      const dataPointTimestamp = new Date(dataPoint.timestamp).getTime();
+      return dataPointTimestamp >= startTimeStamp && dataPointTimestamp <= endTimeStamp;
+    });
+
+    return filteredTimestamps; // An array containing objects with qualifying timestamps
+  }
+
+  const SensorData = await SensorDB.findOne({ _id: id });
+  if (!SensorData) {
+    throw new Error('Data not found');
+  }
+
+  const filteredTimestamps = filterTimestampsInRange(SensorData, sensorType, startTimeStamp, endTimeStamp);
+  return filteredTimestamps;
+}
+
+
 const getGraphData = async (req, res) => {
   try {
     // this endpoint takes if for sensorDB and startTimeStamp and endTimeStamp,
@@ -457,7 +487,145 @@ const getGraphData = async (req, res) => {
   }
 };
 
+const sendEmailPDF = async (req, res) => {
+  try {
+    const { id, startTimeStamp, endTimeStamp, sensorType } = req.body;
+
+    // Validate inputs
+    if (!id || !startTimeStamp || !endTimeStamp || !sensorType) {
+      return res.status(400).json({ message: 'Missing required parameters' });
+    }
+
+    // Convert epoch timestamps to Date objects
+    const startDate = new Date(Number(startTimeStamp)); // Convert epoch time to Date
+    const endDate = new Date(Number(endTimeStamp)); // Convert epoch time to Date
+
+    // Check if the dates are valid
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+      return res.status(400).json({ message: 'Invalid timestamps provided' });
+    }
+
+    // Fetch graph data
+    const graphData = await fetchGraphData(id, sensorType, startTimeStamp, endTimeStamp);
+    if (!graphData || graphData.length === 0) {
+      return res.status(404).json({ message: 'No data found for the given parameters' });
+    }
+
+    // Fetch Device Data
+    const DeviceData = await Device.findOne({ currentUserId: id });
+    if (!DeviceData) {
+      return res.status(404).json({ message: 'Device data not found' });
+    }
+
+
+
+
+    const userID = await InitialUser.findOne({ _id: DeviceData.currentUserId });
+    if (!userID) {
+      return res.status(404).json({ message: 'Admin data not found' });
+    }
+    
+
+    // Fetch Admin ID
+    const adminID = await InitialUser.findOne({ _id: DeviceData.currentAdminId });
+    if (!adminID) {
+      return res.status(404).json({ message: 'Admin data not found' });
+    }
+    
+    console.log("useremail",userID.email)
+    console.log("adminemail",adminID.email)
+    // Calculate min and max values for y-axis adjustment
+    const values = graphData.map(data => data.value);
+
+    // Generate Graph URL
+    const labels = graphData.map(data => new Date(data.timestamp).toLocaleTimeString());
+
+    const chartUrl = `https://quickchart.io/chart?c=${encodeURIComponent(JSON.stringify({
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Sensor Data',
+          data: values,
+          backgroundColor: 'rgba(124, 214, 171, 0.2)', // Color with opacity
+          borderColor: '#7CD6AB', // Line color
+          borderWidth: 2, // Optional: line width
+          pointRadius: 0, // Removes circles on data points
+          pointHoverRadius: 0 // Removes hover effect circles
+        }]
+      },
+      
+    }))}`;
+
+    // Fetch the chart image
+    const chartResponse = await axios.get(chartUrl, { responseType: 'arraybuffer' });
+    const chartImage = Buffer.from(chartResponse.data, 'binary');
+
+    // Generate PDF
+    const doc = new PDFDocument();
+    const pdfPath = path.join(__dirname, `output/GraphDataReport_${id}.pdf`);
+    doc.pipe(fs.createWriteStream(pdfPath));
+
+    doc.text('Graph Data Report');
+    doc.text(`Name: ${userID.name}`);
+    doc.text(`Email: ${userID.email}`);
+    doc.text(`Phone: ${userID.phone}`);
+    doc.text(`Sensor: ${sensorType}`);
+    doc.text(`Start: ${startDate.toLocaleString()}`); // Convert to readable date string
+    doc.text(`End: ${endDate.toLocaleString()}`); // Convert to readable date string
+    doc.image(chartImage, {
+      fit: [500, 400],
+      align: 'center',
+      valign: 'center'
+    });
+
+    doc.end();
+
+    // Set up Nodemailer transporter
+    const transporter = nodemailer.createTransport({
+      service: 'gmail', // Use your email service provider
+      auth: {
+        user: 'harshyadav94250@gmail.com', // Your email address
+        pass: 'sdbg hdro tagy bxtz' // Your email password or app-specific password
+      }
+    });
+
+    // Set up email options
+    const mailOptions = {
+      from: 'your-email@example.com',
+      to: userID.email,
+      cc: adminID.email,
+      // to: "kirtishbarmecha@gmail.com",
+      subject: 'Graph Data Report',
+      text: `Hi ${userID.name},\n\nPlease find attached the Graph Data Report.\n\nBest regards,\nYour Company`,
+      attachments: [
+        {
+          filename: `GraphDataReport_${id}.pdf`,
+          path: pdfPath
+        }
+      ]
+    };
+
+    // Send the email
+    await transporter.sendMail(mailOptions);
+
+    // Respond with success message
+    res.status(200).json({ message: 'PDF generated and email sent successfully', path: pdfPath });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error generating PDF or sending email', error: error.message });
+  }
+};
+
+
+
+
+
+
+
+
 
 module.exports = {
-  addUserToAdmin, removeUserFromAdmin, getUnallocatedUsers, getAdminUsers, getUserDocById, getDeviceIds, getImageByToken, getDeviceData, getSensorDB, getLocation, getGraphData
+  addUserToAdmin, removeUserFromAdmin, getUnallocatedUsers, getAdminUsers, getUserDocById, getDeviceIds, getImageByToken, getDeviceData, getSensorDB, getLocation, getGraphData ,sendEmailPDF
 };
