@@ -7,6 +7,12 @@ const ValueTimestampSchema = new Schema({
     timestamp: { type: String, required: true },
 });
 
+const LatLonSchema = new Schema({
+    lat: { type: Number, required: true },
+    lon: { type: Number, required: true },
+    timestamp: { type: String, required: true },
+});
+
 // Mongoose Schema for Stored Sensor Data
 const SensorDBSchema = new Schema({
     _id: { type: String, required: true },
@@ -28,6 +34,7 @@ const SensorDBSchema = new Schema({
     TemperatureSensor: [ValueTimestampSchema],
     OxygenSaturationSensor: [ValueTimestampSchema],
     BloodPressureSensor: [ValueTimestampSchema],
+    location : [LatLonSchema],
     heartSensorAlertTimeStamp: { type: String, default: "" },
     BreathRateSensorAlertTimeStamp: { type: String, default: "" },
     VentilatonSensorAlertTimeStamp: { type: String, default: "" },
@@ -37,7 +44,6 @@ const SensorDBSchema = new Schema({
     TemperatureSensorAlertTimeStamp: { type: String, default: "" },
     OxygenSaturationSensorAlertTimeStamp: { type: String, default: "" },
     BloodPressureSensorAlertTimeStamp: { type: String, default: "" },
-    location: { type: Number, default: ""},
     maxRecordSize: { type: Number, default: 60 }, // Set your desired max size here
 });
 
