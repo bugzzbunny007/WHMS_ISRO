@@ -100,7 +100,8 @@ exports.sendAlert = async (req, res) => {
             await transport.sendMail(emailAlert(req.user.name, req.user.email, requestBody.alertID, requestBody.values));
             await transport.sendMail(emailAlert("Piyush", "pjtempid@gmail.com", requestBody.alertID, requestBody.values));
             await transport.sendMail(emailAlertAdmin(admin.name, admin.email, req.user.name, req.user.email, requestBody.alertID, requestBody.values));
-
+            const data = await transport.sendMail(emailAlert("Piyush", "pjtempid@gmail.com", requestBody.alertID, requestBody.values)); // TODO, remove later
+            console.log(data)
             return res.status(201).json({ msg: "Email Alert Created" });
         }
         return res.status(200).json({ msg: "received" });

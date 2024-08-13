@@ -103,13 +103,12 @@ const emailAlertDeviceAddedByUser = (userName, userEmail, adminName, adminEmail,
     let content = `<p>Your deviceID : ${deviceID} has been added by ${userName}, email"${userEmail}".</p>`;
 
     // Iterate through alertID and values arrays
-
     return generateMail(adminName, adminEmail, subject, content);
 };
 
 transportObject = () => {
     return {
-        host: 'smtp.gmail.com',
+        host: process.env.NODE_MAILER_SERVICE_HOST,
         port: 587,
         secure: false, // use SSL
         secureConnection: false,
