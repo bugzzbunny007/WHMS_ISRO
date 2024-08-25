@@ -234,9 +234,12 @@ const getDocById = async (req, res) => {
         // Open a download stream for the UserDocument's file
         const downloadStream = bucket.openDownloadStreamByName(userDocument.filename);
 
+        // Safely encode the filename for the Content-Disposition header
+        const encodedFilename = encodeURIComponent(userDocument.originalname);
+
         // Set response headers
         res.setHeader('Content-Type', userDocument.contentType);
-        res.setHeader('Content-Disposition', `inline; filename=${userDocument.originalname}`);
+        res.setHeader('Content-Disposition', `inline; filename="${encodedFilename}"`);
 
         // Pipe the data from MongoDB to the response
         downloadStream.pipe(res);
@@ -245,6 +248,7 @@ const getDocById = async (req, res) => {
         return res.status(500).json({ message: 'Error retrieving image', error: err });
     }
 }
+
 
 const addDeviceIdToAdmin = async (req, res) => {
     try {
