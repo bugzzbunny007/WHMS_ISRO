@@ -279,7 +279,7 @@ exports.createMongoUserEndpoint = async (req, res) => {
         OxygenSaturationSensor: { value: 0, timestamp: '0', unit: '', range: '' },
         BloodPressureSensor: { value: 0, timestamp: '0', unit: '', range: '' },
 
-        location: { lat: 0, lon: 0, timestamp: '' },
+        location: { lat: 28.6131663, lon: 77.2278253, timestamp: '' },
 
       };
 
