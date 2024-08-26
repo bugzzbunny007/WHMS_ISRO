@@ -12,6 +12,19 @@ const sensorContent = [
     "Your Blood Pressure Sensor is showing abnormal values."
 ]
 
+const sensorUnits = [
+    "bpm",
+    "resp/min",
+    "L/min",
+    "L",
+    "g",
+    "step/min",
+    "°C",
+    "%",
+    "mmHg",
+];
+
+
 const sensorContentAdmin = [
     "Your Heart Sensor is showing abnormal values.",
     "Your Breath Rate Sensor is showing abnormal values.",
@@ -23,6 +36,17 @@ const sensorContentAdmin = [
     "Your Oxygen Saturation Sensor is showing abnormal values.",
     "Your Blood Pressure Sensor is showing abnormal values."
 ]
+const formatValue = (value) => {
+
+    if (value.split('.').length == 1) {
+        return value
+    }
+    else if (value.split('.').length == 2) {
+        console.log(value.split('.')[1].slice(0, 2))
+        return value.split('.')[0] + "." + value.split('.')[1].slice(0, 2)
+    }
+
+}
 
 const generateMail = (name, email, subject, content) => {
     return {
@@ -60,7 +84,7 @@ const emailAlert = (name, email, alertID, values) => {
     for (let i = 0; i < alertID.length; i++) {
         // Check if there is an alert for the sensor
         if (alertID[i] === 1) {
-            content += `<p>${sensorContent[i]}</br>Its current reading is ${values[i]}</p>`;
+            content += `<p>${sensorContent[i]}</br>Its current reading is ${formatValue(values[i])} ${sensorUnits[i]}</p>`;
         }
     }
     return generateMail(name, email, subject, content);
@@ -77,7 +101,7 @@ const emailAlertAdmin = (adminName, adminEmail, userName, userEmail, alertID, va
     for (let i = 0; i < alertID.length; i++) {
         // Check if there is an alert for the sensor
         if (alertID[i] === 1) {
-            content += `<p>${sensorContentAdmin[i]}</br>Its current reading is ${values[i]}</p>`;
+            content += `<p>${sensorContentAdmin[i]}</br>Its current reading is ${formatValue(values[i])} ${sensorUnits[i]}</p>`;
         }
     }
     return generateMail(adminName, adminEmail, subject, content);
