@@ -72,7 +72,7 @@ exports.uploadDocument = async (req, res) => {
         const deptName = req.body.deptName; // Extract deptName from request body
         const orgName = req.body.orgName; // Extract deptName from request body
 
-        console.log(deptName)
+        console.log(deptName,orgName)
         const db = mongoose.connection.db;
         const bucket = new GridFSBucket(db, { bucketName: 'userdocuments' });
 
@@ -108,7 +108,7 @@ exports.uploadDocument = async (req, res) => {
                     $set: {
                         doc_uploaded: true,
                         deptName: deptName,// Update deptName field,
-                        orgName: orgName
+                        orgName: orgName //update org name
                     }
                 },
                 { new: true } // Return the updated document
@@ -143,7 +143,8 @@ exports.uploadDocument = async (req, res) => {
                 {
                     $set: {
                         doc_uploaded: true,
-                        deptName: deptName // Update deptName field
+                        deptName: deptName, // Update deptName field
+                        orgName: orgName //update org name
                     }
                 },
                 { new: true } // Return the updated document
