@@ -255,84 +255,70 @@ const addDeviceIdToAdmin = async (req, res) => {
         const adminId = req.body.adminId;
         const deviceIdsToAdd = req.body.deviceIds;
 
-        // Check if any of the devices are already allocated to another admin
-        const existingDevices = await Device.find({
-            deviceId: { $in: deviceIdsToAdd },
-            currentAdminId: { $ne: null },
-        });
+        // Initialize arrays to track different outcomes
+        const newDeviceIds = [];
+        const updatedDeviceIds = [];
+        const allocatedDeviceIds = [];
 
-        // Store information about devices that are already allocated
-        const allocatedDeviceIds = existingDevices.map(device => device.deviceId);
+        // Iterate over each device ID
+        for (const deviceId of deviceIdsToAdd) {
+            // Check if the device already exists
+            let device = await Device.findOne({ deviceId });
 
-        // Find devices without a current admin and update their current admin to the new admin
-        const devicesToUpdate = await Device.find({
-            deviceId: { $in: deviceIdsToAdd },
-            currentAdminId: null,
-        });
+            if (!device) {
+                // Device doesn't exist, create a new one
+                const newDevice = new Device({
+                    deviceId,
+                    currentAdminId: adminId,
+                    location: [{ lat: 0, lon: 0, timestamp: "" }]
+                });
+                await newDevice.save();
+                newDeviceIds.push(deviceId);
+            } else {
+                // Device exists, update the currentAdminId
+                if (device.currentAdminId && device.currentAdminId !== adminId) {
+                    // Remove device from the old admin's deviceIds list
+                    await Admin.updateOne(
+                        { _id: device.currentAdminId },
+                        { $pull: { deviceIds: deviceId } }
+                    );
+                }
 
-        const updatedDeviceIds = devicesToUpdate.map(device => device.deviceId);
-        const newDeviceIds = deviceIdsToAdd.filter(deviceId => !allocatedDeviceIds.includes(deviceId) && !updatedDeviceIds.includes(deviceId));
+                // Update the currentAdminId field
+                device.currentAdminId = adminId;
+                await device.save();
+                updatedDeviceIds.push(deviceId);
 
-        // Update the devices to set currentAdminId to the new admin
-        await Device.updateMany(
-            { _id: { $in: devicesToUpdate.map(device => device._id) } },
-            { $set: { currentAdminId: adminId } }
-        );
-
-        // Create a new device for each deviceId that doesn't exist
-        const newDevices = newDeviceIds.map(deviceId => ({
-            deviceId,
-            currentAdminId: adminId,
-        }));
-
-        // Insert the new devices into the Device collection and get their inserted IDs
-        const insertResult = await Device.insertMany(newDevices);
-        const insertedDeviceIds = insertResult.map(doc => doc._id);
-
-        // Update the newly created devices with location data
-        await Device.updateMany(
-            { _id: { $in: insertedDeviceIds } },
-            {
-                $push: {
-                    location: {
-                        lat: 0,
-                        lon: 0,
-                        timestamp: ""
-                    }
+                // Track devices already allocated to another admin
+                if (device.currentAdminId && device.currentAdminId !== adminId) {
+                    allocatedDeviceIds.push(deviceId);
                 }
             }
-        );
 
-        // Update the Admin document with the new deviceIds
-        const updatedAdmin = await Admin.findByIdAndUpdate(
-            adminId,
-            { $addToSet: { deviceIds: { $each: deviceIdsToAdd } } },
-            { new: true }
-        );
-
-        if (!updatedAdmin) {
-            // Handle case where Admin with the given ID is not found
-            console.log(`Admin with ID ${adminId} not found.`);
-            return res.status(404).json({ message: `Admin with ID ${adminId} not found.` });
+            // Update the new admin's deviceIds list
+            await Admin.updateOne(
+                { _id: adminId },
+                { $addToSet: { deviceIds: deviceId } }
+            );
         }
 
-        console.log(`Device IDs added to Admin with ID ${adminId}: ${updatedAdmin.deviceIds}`);
-
-        // Provide details of added and not added device IDs
+        // Build the response object
         const response = {
-            message: 'Device IDs added successfully',
-            newDeviceIds: newDeviceIds,
-            updatedDeviceIds: updatedDeviceIds,
+            message: 'Device IDs processed successfully',
+            newDeviceIds,
+            updatedDeviceIds,
             notAddedDeviceIds: allocatedDeviceIds,
         };
 
         return res.status(200).json(response);
     } catch (error) {
         // Handle errors
-        console.error(`Error adding device IDs to Admin ${error}`);
+        console.error(`Error adding device IDs to Admin: ${error}`);
         return res.status(500).json({ message: 'Error adding device IDs', error: error.message });
     }
 };
+
+
 
 
 
