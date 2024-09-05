@@ -176,25 +176,6 @@ exports.refresh = async (req, res) => {
 };
 
 
-// verify email
-// this work after signup & signin
-// exports.verifyEmail = (req,res) => {
-//   firebase
-//     .auth()
-//     .currentUser.sendEmailVerification()
-//     .then(function () {
-//       return res.status(200).json({ status: "Email Verification Sent!" });
-//     })
-//     .catch(function (error) {
-//       let errorCode = error.code;
-//       let errorMessage = error.message;
-//       if (errorCode === "auth/too-many-requests") {
-//         return res.status(500).json({ error: errorMessage });
-//       }
-//     });
-// };
-
-
 // Create an API endpoint for sending O
 exports.verifyOTP = (req, res) => {
   const verificationId = req.body.verificationId; // Get the verification ID from the client
