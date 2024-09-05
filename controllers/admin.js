@@ -21,8 +21,8 @@ var transport = nodemailer.createTransport(transportObject());
 const today = new Date();
 const formattedDate = today.toISOString().split('T')[0];
 
-// const axios = require('axios');
-const PDFDocument = require('pdfkit');
+const axios = require('axios');
+// const PDFDocument = require('pdfkit');
 
 // we can this function into getGraphdata also but it needs
 async function fetchGraphData(id, sensorType, startTimeStamp, endTimeStamp) {
