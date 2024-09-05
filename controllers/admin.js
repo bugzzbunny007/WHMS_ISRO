@@ -22,7 +22,7 @@ const today = new Date();
 const formattedDate = today.toISOString().split('T')[0];
 
 const axios = require('axios');
-const PDFDocument = require('pdfkit');
+// const PDFDocument = require('pdfkit');
 
 // we can this function into getGraphdata also but it needs 
 async function fetchGraphData(id, sensorType, startTimeStamp, endTimeStamp) {
@@ -522,116 +522,116 @@ const getGraphData = async (req, res) => {
 
 const sendEmailPDF = async (req, res) => {
   try {
-    const { id, startTimeStamp, endTimeStamp, sensorType } = req.body;
+    // const { id, startTimeStamp, endTimeStamp, sensorType } = req.body;
 
-    // Validate inputs
-    if (!id || !startTimeStamp || !endTimeStamp || !sensorType) {
-      return res.status(400).json({ message: 'Missing required parameters' });
-    }
+    // // Validate inputs
+    // if (!id || !startTimeStamp || !endTimeStamp || !sensorType) {
+    //   return res.status(400).json({ message: 'Missing required parameters' });
+    // }
 
-    // Convert epoch timestamps to Date objects
-    const startDate = new Date(Number(startTimeStamp)); // Convert epoch time to Date
-    const endDate = new Date(Number(endTimeStamp)); // Convert epoch time to Date
+    // // Convert epoch timestamps to Date objects
+    // const startDate = new Date(Number(startTimeStamp)); // Convert epoch time to Date
+    // const endDate = new Date(Number(endTimeStamp)); // Convert epoch time to Date
 
-    // Check if the dates are valid
-    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-      return res.status(400).json({ message: 'Invalid timestamps provided' });
-    }
+    // // Check if the dates are valid
+    // if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+    //   return res.status(400).json({ message: 'Invalid timestamps provided' });
+    // }
 
-    // Fetch graph data
-    const graphData = await fetchGraphData(id, sensorType, startTimeStamp, endTimeStamp);
-    if (!graphData || graphData.length === 0) {
-      return res.status(404).json({ message: 'No data found for the given parameters' });
-    }
+    // // Fetch graph data
+    // const graphData = await fetchGraphData(id, sensorType, startTimeStamp, endTimeStamp);
+    // if (!graphData || graphData.length === 0) {
+    //   return res.status(404).json({ message: 'No data found for the given parameters' });
+    // }
 
-    // Fetch Device Data
-    const DeviceData = await Device.findOne({ currentUserId: id });
-    if (!DeviceData) {
-      return res.status(404).json({ message: 'Device data not found' });
-    }
+    // // Fetch Device Data
+    // const DeviceData = await Device.findOne({ currentUserId: id });
+    // if (!DeviceData) {
+    //   return res.status(404).json({ message: 'Device data not found' });
+    // }
 
-    const userID = await InitialUser.findOne({ _id: DeviceData.currentUserId });
-    if (!userID) {
-      return res.status(404).json({ message: 'User data not found' });
-    }
+    // const userID = await InitialUser.findOne({ _id: DeviceData.currentUserId });
+    // if (!userID) {
+    //   return res.status(404).json({ message: 'User data not found' });
+    // }
 
-    // Fetch Admin ID
-    const adminID = await InitialUser.findOne({ _id: DeviceData.currentAdminId });
-    if (!adminID) {
-      return res.status(404).json({ message: 'Admin data not found' });
-    }
+    // // Fetch Admin ID
+    // const adminID = await InitialUser.findOne({ _id: DeviceData.currentAdminId });
+    // if (!adminID) {
+    //   return res.status(404).json({ message: 'Admin data not found' });
+    // }
 
-    console.log("useremail", userID.email);
-    console.log("adminemail", adminID.email);
+    // console.log("useremail", userID.email);
+    // console.log("adminemail", adminID.email);
 
-    // Calculate min and max values for y-axis adjustment
-    const values = graphData.map(data => data.value);
+    // // Calculate min and max values for y-axis adjustment
+    // const values = graphData.map(data => data.value);
 
-    // Generate Graph URL
-    const labels = graphData.map(data => new Date(data.timestamp).toLocaleTimeString());
+    // // Generate Graph URL
+    // const labels = graphData.map(data => new Date(data.timestamp).toLocaleTimeString());
 
-    const chartUrl = `https://quickchart.io/chart?c=${encodeURIComponent(JSON.stringify({
-      type: 'line',
-      data: {
-        labels: labels,
-        datasets: [{
-          label: 'Sensor Data',
-          data: values,
-          backgroundColor: 'rgba(124, 214, 171, 0.2)', // Color with opacity
-          borderColor: '#7CD6AB', // Line color
-          borderWidth: 2, // Optional: line width
-          pointRadius: 0, // Removes circles on data points
-          pointHoverRadius: 0 // Removes hover effect circles
-        }]
-      },
-    }))}`;
+    // const chartUrl = `https://quickchart.io/chart?c=${encodeURIComponent(JSON.stringify({
+    //   type: 'line',
+    //   data: {
+    //     labels: labels,
+    //     datasets: [{
+    //       label: 'Sensor Data',
+    //       data: values,
+    //       backgroundColor: 'rgba(124, 214, 171, 0.2)', // Color with opacity
+    //       borderColor: '#7CD6AB', // Line color
+    //       borderWidth: 2, // Optional: line width
+    //       pointRadius: 0, // Removes circles on data points
+    //       pointHoverRadius: 0 // Removes hover effect circles
+    //     }]
+    //   },
+    // }))}`;
 
-    // Fetch the chart image
-    const chartResponse = await axios.get(chartUrl, { responseType: 'arraybuffer' });
-    const chartImage = Buffer.from(chartResponse.data, 'binary');
+    // // Fetch the chart image
+    // const chartResponse = await axios.get(chartUrl, { responseType: 'arraybuffer' });
+    // const chartImage = Buffer.from(chartResponse.data, 'binary');
 
-    // Generate PDF in memory
-    const doc = new PDFDocument();
-    let pdfBuffers = [];
-    doc.on('data', pdfBuffers.push.bind(pdfBuffers));
-    doc.on('end', async () => {
-      const pdfData = Buffer.concat(pdfBuffers);
+    // // Generate PDF in memory
+    // const doc = new PDFDocument();
+    // let pdfBuffers = [];
+    // doc.on('data', pdfBuffers.push.bind(pdfBuffers));
+    // doc.on('end', async () => {
+    //   const pdfData = Buffer.concat(pdfBuffers);
 
-      // Set up email options
-      const mailOptions = {
-        from: 'your-email@example.com',
-        to: userID.email,
-        cc: adminID.email,
-        subject: 'Graph Data Report',
-        text: `Hi ${userID.name},\n\nPlease find attached the Graph Data Report.\n\nBest regards,\nYour Company`,
-        attachments: [
-          {
-            filename: `GraphDataReport_${id}.pdf`,
-            content: pdfData
-          }
-        ]
-      };
+    //   // Set up email options
+    //   const mailOptions = {
+    //     from: 'your-email@example.com',
+    //     to: userID.email,
+    //     cc: adminID.email,
+    //     subject: 'Graph Data Report',
+    //     text: `Hi ${userID.name},\n\nPlease find attached the Graph Data Report.\n\nBest regards,\nYour Company`,
+    //     attachments: [
+    //       {
+    //         filename: `GraphDataReport_${id}.pdf`,
+    //         content: pdfData
+    //       }
+    //     ]
+    //   };
 
 
-      await transport.sendMail(mailOptions);
-      // Respond with success message
-      res.status(200).json({ message: 'PDF generated and email sent successfully' });
-    });
+    //   await transport.sendMail(mailOptions);
+    //   // Respond with success message
+    res.status(200).json({ message: 'PDF generated and email sent successfully' });
+    // });
 
-    doc.text('Graph Data Report');
-    doc.text(`Name: ${userID.name}`);
-    doc.text(`Email: ${userID.email}`);
-    doc.text(`Phone: ${userID.phone}`);
-    doc.text(`Sensor: ${sensorType}`);
-    doc.text(`Start: ${startDate.toLocaleString()}`); // Convert to readable date string
-    doc.text(`End: ${endDate.toLocaleString()}`); // Convert to readable date string
-    doc.image(chartImage, {
-      fit: [500, 400],
-      align: 'center',
-      valign: 'center'
-    });
+    // doc.text('Graph Data Report');
+    // doc.text(`Name: ${userID.name}`);
+    // doc.text(`Email: ${userID.email}`);
+    // doc.text(`Phone: ${userID.phone}`);
+    // doc.text(`Sensor: ${sensorType}`);
+    // doc.text(`Start: ${startDate.toLocaleString()}`); // Convert to readable date string
+    // doc.text(`End: ${endDate.toLocaleString()}`); // Convert to readable date string
+    // doc.image(chartImage, {
+    //   fit: [500, 400],
+    //   align: 'center',
+    //   valign: 'center'
+    // });
 
-    doc.end();
+    // doc.end();
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Error generating PDF or sending email', error: error.message });
