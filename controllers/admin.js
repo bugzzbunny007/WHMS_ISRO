@@ -519,9 +519,11 @@ const getGraphData = async (req, res) => {
     return res.status(500).json({ message: 'Internal Server Error', error: err });
   }
 };
+
 const puppeteer = require('puppeteer-extra');
+const chromium = require('chrome-aws-lambda');
+const puppeteer = require('puppeteer-core');
 const stealth = require('puppeteer-extra-plugin-stealth');
-const { executablePath } = require('puppeteer');
 const https = require('https');
 
 const sendEmailPDF = async (req, res) => {
@@ -623,12 +625,11 @@ const sendEmailPDF = async (req, res) => {
       </html>
     `;
 
-    // Launch Puppeteer and generate the PDF
-    puppeteer.use(stealth()); // Using the stealth plugin
+    // Launch Puppeteer using chrome-aws-lambda
     const browser = await puppeteer.launch({
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
-      executablePath: executablePath(),
-      headless: true,
+      args: [...chromium.args, '--no-sandbox', '--disable-setuid-sandbox'],
+      executablePath: await chromium.executablePath,
+      headless: chromium.headless,
       ignoreHTTPSErrors: true,
     });
 
@@ -661,6 +662,7 @@ const sendEmailPDF = async (req, res) => {
     res.status(500).json({ message: 'Error generating PDF or sending email', error: error.message });
   }
 };
+
 
 
 
