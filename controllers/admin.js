@@ -21,28 +21,28 @@ var transport = nodemailer.createTransport(transportObject());
 const today = new Date();
 const formattedDate = today.toISOString().split('T')[0];
 
-const axios = require('axios');
+// const axios = require('axios');
 // const PDFDocument = require('pdfkit');
 
 // we can this function into getGraphdata also but it needs 
-async function fetchGraphData(id, sensorType, startTimeStamp, endTimeStamp) {
-  function filterTimestampsInRange(sensorData, sensorType, startTimeStamp, endTimeStamp) {
-    const filteredTimestamps = sensorData[sensorType].filter(dataPoint => {
-      const dataPointTimestamp = new Date(dataPoint.timestamp).getTime();
-      return dataPointTimestamp >= startTimeStamp && dataPointTimestamp <= endTimeStamp;
-    });
+// async function fetchGraphData(id, sensorType, startTimeStamp, endTimeStamp) {
+//   function filterTimestampsInRange(sensorData, sensorType, startTimeStamp, endTimeStamp) {
+//     const filteredTimestamps = sensorData[sensorType].filter(dataPoint => {
+//       const dataPointTimestamp = new Date(dataPoint.timestamp).getTime();
+//       return dataPointTimestamp >= startTimeStamp && dataPointTimestamp <= endTimeStamp;
+//     });
 
-    return filteredTimestamps; // An array containing objects with qualifying timestamps
-  }
+//     return filteredTimestamps; // An array containing objects with qualifying timestamps
+//   }
 
-  const SensorData = await SensorDB.findOne({ _id: id });
-  if (!SensorData) {
-    throw new Error('Data not found');
-  }
+//   const SensorData = await SensorDB.findOne({ _id: id });
+//   if (!SensorData) {
+//     throw new Error('Data not found');
+//   }
 
-  const filteredTimestamps = filterTimestampsInRange(SensorData, sensorType, startTimeStamp, endTimeStamp);
-  return filteredTimestamps;
-}
+//   const filteredTimestamps = filterTimestampsInRange(SensorData, sensorType, startTimeStamp, endTimeStamp);
+//   return filteredTimestamps;
+// }
 
 const addUserToAdmin = async (req, res) => {
   try {
