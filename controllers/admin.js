@@ -5,6 +5,7 @@ const InitialUser = require("../models/InitialUser");
 const Environment = require("../models/Environment");
 const Profile = require("../models/Profile");
 var mongoose = require('mongoose');
+
 const { Types } = mongoose;
 const logger = require('./logger');
 const UserDocument = require('../models/UserDocument');
@@ -518,35 +519,31 @@ const getGraphData = async (req, res) => {
     return res.status(500).json({ message: 'Internal Server Error', error: err });
   }
 };
-
+const puppeteer = require('puppeteer-extra');
+const stealth = require('puppeteer-extra-plugin-stealth');
+const { executablePath } = require('puppeteer');
 const https = require('https');
-const puppeteer = require('puppeteer');
 
 const sendEmailPDF = async (req, res) => {
   try {
     const { id, startTimeStamp, endTimeStamp, sensorType } = req.body;
 
-    // Validate inputs
     if (!id || !startTimeStamp || !endTimeStamp || !sensorType) {
       return res.status(400).json({ message: 'Missing required parameters' });
     }
 
-    // Convert epoch timestamps to Date objects
-    const startDate = new Date(Number(startTimeStamp)); // Convert epoch time to Date
-    const endDate = new Date(Number(endTimeStamp)); // Convert epoch time to Date
+    const startDate = new Date(Number(startTimeStamp));
+    const endDate = new Date(Number(endTimeStamp));
 
-    // Check if the dates are valid
     if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
       return res.status(400).json({ message: 'Invalid timestamps provided' });
     }
 
-    // Fetch graph data
     const graphData = await fetchGraphData(id, sensorType, startTimeStamp, endTimeStamp);
     if (!graphData || graphData.length === 0) {
       return res.status(404).json({ message: 'No data found for the given parameters' });
     }
 
-    // Fetch Device Data
     const DeviceData = await Device.findOne({ currentUserId: id });
     if (!DeviceData) {
       return res.status(404).json({ message: 'Device data not found' });
@@ -557,13 +554,11 @@ const sendEmailPDF = async (req, res) => {
       return res.status(404).json({ message: 'User data not found' });
     }
 
-    // Fetch Admin ID
     const adminID = await InitialUser.findOne({ _id: DeviceData.currentAdminId });
     if (!adminID) {
       return res.status(404).json({ message: 'Admin data not found' });
     }
 
-    // Generate Graph URL
     const labels = graphData.map(data => new Date(data.timestamp).toLocaleTimeString());
     const values = graphData.map(data => data.value);
     const chartUrl = `https://quickchart.io/chart?c=${encodeURIComponent(JSON.stringify({
@@ -582,7 +577,6 @@ const sendEmailPDF = async (req, res) => {
       },
     }))}`;
 
-    // Fetch the chart image using the https module
     const fetchChartImage = (url) => {
       return new Promise((resolve, reject) => {
         https.get(url, (response) => {
@@ -596,10 +590,8 @@ const sendEmailPDF = async (req, res) => {
       });
     };
 
-    // Fetch the chart image
     const chartImage = await fetchChartImage(chartUrl);
 
-    // Prepare the HTML content for the PDF
     const htmlContent = `
       <html>
         <head>
@@ -632,13 +624,19 @@ const sendEmailPDF = async (req, res) => {
     `;
 
     // Launch Puppeteer and generate the PDF
-    const browser = await puppeteer.launch();
+    puppeteer.use(stealth()); // Using the stealth plugin
+    const browser = await puppeteer.launch({
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      executablePath: executablePath(),
+      headless: true,
+      ignoreHTTPSErrors: true,
+    });
+
     const page = await browser.newPage();
     await page.setContent(htmlContent);
     const pdfBuffer = await page.pdf({ format: 'A4' });
     await browser.close();
 
-    // Set up email options
     const mailOptions = {
       from: process.env.NODE_MAILER_USEREMAIL,
       to: userID.email,
@@ -654,10 +652,8 @@ const sendEmailPDF = async (req, res) => {
       ]
     };
 
-    // Send the email
     await transport.sendMail(mailOptions);
 
-    // Respond with success message
     res.status(200).json({ message: 'PDF generated and email sent successfully' });
 
   } catch (error) {
@@ -665,6 +661,10 @@ const sendEmailPDF = async (req, res) => {
     res.status(500).json({ message: 'Error generating PDF or sending email', error: error.message });
   }
 };
+
+
+
+
 
 
 
