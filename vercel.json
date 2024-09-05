@@ -5,7 +5,7 @@
       "src": "app.js",
       "use": "@vercel/node",
       "config":{
-        "installCommand":"npm install --force"
+        "installCommand":"npm install --legacy-peer-deps"
       }
     }
   ],
