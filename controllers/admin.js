@@ -5,15 +5,17 @@ const InitialUser = require("../models/InitialUser");
 const Environment = require("../models/Environment");
 const Profile = require("../models/Profile");
 var mongoose = require('mongoose');
-const { Types } = mongoose;
 const logger = require('./logger');
 const UserDocument = require('../models/UserDocument');
 const { GridFSBucket } = require('mongodb');
 const { Readable } = require('stream');
 const SensorDB = require("../models/SensorDB");
-const nodemailer = require('nodemailer'); 
+const nodemailer = require('nodemailer');
 
 
+const { transportObject } = require('../utils/mail')
+
+var transport = nodemailer.createTransport(transportObject());
 const path = require('path');
 const today = new Date();
 const formattedDate = today.toISOString().split('T')[0];
@@ -449,7 +451,8 @@ const getGraphData = async (req, res) => {
     const startTimeStamp = req.body.startTimeStamp;
     const endTimeStamp = req.body.endTimeStamp;
     const sensorType = req.body.sensorType;
-
+    console.log("timestamps")
+    console.log(startTimeStamp, endTimeStamp, sensorType)
 
     // Input Validation
     if (!sensorType) {
@@ -524,16 +527,16 @@ const sendEmailPDF = async (req, res) => {
     if (!userID) {
       return res.status(404).json({ message: 'Admin data not found' });
     }
-    
+
 
     // Fetch Admin ID
     const adminID = await InitialUser.findOne({ _id: DeviceData.currentAdminId });
     if (!adminID) {
       return res.status(404).json({ message: 'Admin data not found' });
     }
-    
-    console.log("useremail",userID.email)
-    console.log("adminemail",adminID.email)
+
+    console.log("useremail", userID.email)
+    console.log("adminemail", adminID.email)
     // Calculate min and max values for y-axis adjustment
     const values = graphData.map(data => data.value);
 
@@ -554,7 +557,7 @@ const sendEmailPDF = async (req, res) => {
           pointHoverRadius: 0 // Removes hover effect circles
         }]
       },
-      
+
     }))}`;
 
     // Fetch the chart image
@@ -581,14 +584,7 @@ const sendEmailPDF = async (req, res) => {
 
     doc.end();
 
-    // Set up Nodemailer transporter
-    const transporter = nodemailer.createTransport({
-      service: 'gmail', // Use your email service provider
-      auth: {
-        user: 'harshyadav94250@gmail.com', // Your email address
-        pass: 'sdbg hdro tagy bxtz' // Your email password or app-specific password
-      }
-    });
+
 
     // Set up email options
     const mailOptions = {
@@ -607,7 +603,7 @@ const sendEmailPDF = async (req, res) => {
     };
 
     // Send the email
-    await transporter.sendMail(mailOptions);
+    await transport.sendMail(mailOptions);
 
     // Respond with success message
     res.status(200).json({ message: 'PDF generated and email sent successfully', path: pdfPath });
@@ -627,5 +623,5 @@ const sendEmailPDF = async (req, res) => {
 
 
 module.exports = {
-  addUserToAdmin, removeUserFromAdmin, getUnallocatedUsers, getAdminUsers, getUserDocById, getDeviceIds, getImageByToken, getDeviceData, getSensorDB, getLocation, getGraphData ,sendEmailPDF
+  addUserToAdmin, removeUserFromAdmin, getUnallocatedUsers, getAdminUsers, getUserDocById, getDeviceIds, getImageByToken, getDeviceData, getSensorDB, getLocation, getGraphData, sendEmailPDF
 };
