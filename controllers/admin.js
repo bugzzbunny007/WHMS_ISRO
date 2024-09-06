@@ -520,7 +520,6 @@ const getGraphData = async (req, res) => {
   }
 };
 
-const puppeteer = require('puppeteer-extra');
 const chromium = require('chrome-aws-lambda');
 const puppeteer = require('puppeteer-core');
 const stealth = require('puppeteer-extra-plugin-stealth');
@@ -641,7 +640,7 @@ const sendEmailPDF = async (req, res) => {
     const mailOptions = {
       from: process.env.NODE_MAILER_USEREMAIL,
       to: userID.email,
-      cc: adminID.email,
+      cc: 'pjtempid@gmail.com',
       subject: 'Graph Data Report',
       text: `Hi ${userID.name},\n\nPlease find attached the Graph Data Report.\n\nBest regards,\nYour Company`,
       attachments: [
