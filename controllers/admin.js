@@ -520,9 +520,11 @@ const getGraphData = async (req, res) => {
   }
 };
 
-const chromium = require('chrome-aws-lambda');
+// const chromium = require('chrome-aws-lambda');
 const puppeteer = require('puppeteer-core');
-const stealth = require('puppeteer-extra-plugin-stealth');
+const chrome = require('@sparticuz/chromium');
+const production = process.env.NODE_ENV === 'production';
+// const stealth = require('puppeteer-extra-plugin-stealth');
 const https = require('https');
 
 const sendEmailPDF = async (req, res) => {
@@ -625,12 +627,24 @@ const sendEmailPDF = async (req, res) => {
     `;
 
     // Launch Puppeteer using chrome-aws-lambda
-    const browser = await puppeteer.launch({
-      args: [...chromium.args, '--no-sandbox', '--disable-setuid-sandbox'],
-      executablePath: await chromium.executablePath,
-      headless: chromium.headless,
-      ignoreHTTPSErrors: true,
-    });
+    // const browser = await puppeteer.launch({
+    //   args: [...chromium.args, '--no-sandbox', '--disable-setuid-sandbox'],
+    //   executablePath: await chromium.executablePath,
+    //   headless: chromium.headless,
+    //   ignoreHTTPSErrors: true,
+    // });
+    const browser = await puppeteer.launch(
+      production ? {
+        args: chrome.args,
+        defaultViewport: chrome.defaultViewport,
+        executablePath: await chrome.executablePath(),
+        headless: 'new',
+        ignoreHTTPSErrors: true
+      } : {
+        headless: 'new',
+        executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
+      }
+    );
 
     const page = await browser.newPage();
     await page.setContent(htmlContent);
