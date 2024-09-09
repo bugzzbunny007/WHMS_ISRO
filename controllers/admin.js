@@ -6,6 +6,8 @@ const Environment = require("../models/Environment");
 const Profile = require("../models/Profile");
 var mongoose = require('mongoose');
 
+const config = require('../assets/logo.json');
+
 const { Types } = mongoose;
 const logger = require('./logger');
 const UserDocument = require('../models/UserDocument');
@@ -526,6 +528,176 @@ const chrome = require('@sparticuz/chromium');
 const production = process.env.NODE_ENV === 'production';
 // const stealth = require('puppeteer-extra-plugin-stealth');
 const https = require('https');
+const { start } = require("repl");
+
+function formatDate(dateString) {
+  const months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
+
+  // Split the input date string into components
+  const [year, month, day] = dateString.split('-');
+
+  // Get the month name from the months array
+  const monthName = months[parseInt(month, 10) - 1];
+
+  // Return the formatted date string
+  return `${parseInt(day, 10)} ${monthName}, ${year}`;
+}
+
+const generateHTMLContent = async (id, sensorType, startTimeStamp, endTimeStamp) => {
+  const startDate = new Date(Number(startTimeStamp));
+  const endDate = new Date(Number(endTimeStamp));
+  console.log("Dates", startDate, endDate)
+  console.log("Dates Parsed", startDate.toDateString())
+  const graphData = await fetchGraphData(id, sensorType, startTimeStamp, endTimeStamp);
+  if (!graphData || graphData.length === 0) {
+    throw new Error('No data found for the given parameters');
+  }
+
+  const DeviceData = await Device.findOne({ currentUserId: id });
+  if (!DeviceData) {
+    throw new Error('Device data not found');
+  }
+
+  const userID = await InitialUser.findOne({ _id: DeviceData.currentUserId });
+  if (!userID) {
+    throw new Error('User data not found');
+  }
+
+  const labels = graphData.map(data => new Date(data.timestamp).toLocaleTimeString());
+  const values = graphData.map(data => data.value);
+  const chartUrl = `https://quickchart.io/chart?c=${encodeURIComponent(JSON.stringify({
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Sensor Data',
+        data: values,
+        backgroundColor: 'rgba(124, 214, 171, 0.2)',
+        borderColor: '#7CD6AB',
+        borderWidth: 2,
+        pointRadius: 0,
+        pointHoverRadius: 0
+      }]
+    },
+  }))}`;
+
+  const fetchChartImage = (url) => {
+    return new Promise((resolve, reject) => {
+      https.get(url, (response) => {
+        let data = [];
+        response.on('data', (chunk) => data.push(chunk));
+        response.on('end', () => {
+          const imageData = Buffer.concat(data).toString('base64');
+          resolve(`data:image/png;base64,${imageData}`);
+        });
+      }).on('error', (err) => reject(err));
+    });
+  };
+
+  const chartImage = await fetchChartImage(chartUrl);
+
+  const htmlContent = `<html>
+<head>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+    h1 {
+      text-align: center;
+    }
+    h2 {
+      text-align: center;
+    }
+    .container {
+      width: 80%; /* Adjusted width to 80% */
+      margin: 0 auto; /* Center the container */
+      padding: 5px;
+    }
+    .details {
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .details .heading {
+      font-weight: bold;
+      font-size: 1.2em; /* Slightly larger size */
+      display: inline-block;
+      width: 150px; /* Fixed width for alignment */
+      text-align: right;
+      margin-right: 10px; /* Space between heading and field */
+    }
+    .details .field {
+      font-size: 1em; /* Regular size */
+      display: inline-block;
+      vertical-align: top; /* Align text to the top */
+    }
+    .chart {
+      text-align: center;
+    }
+    .logo {
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>W-HMS Health Report</h1>
+    <h2>Patient Details:</h2>
+    <div class="details">
+      <p><span class="heading">Name - </span><span class="">${userID.name.toLocaleUpperCase()}</span></p>
+      <p><span class="heading">Phone:</span> <span class="">${userID.phone} | Email: ${userID.email}</span></p>
+      <p><span class="heading">Sensor:</span> <span class="">${sensorType}</span></p>
+      <p><span class="heading">Start Date:</span> <span class="">${startDate.toDateString()}, ${startDate.toLocaleTimeString()}</span></p>
+      <p><span class="heading">End Date:</span> <span class="">${endDate.toDateString()}, ${endDate.toLocaleTimeString()}</span></p>
+    </div>
+    <div class="chart" style="width: 90%; margin: 0 auto;">
+      <img src="${chartImage}" alt="Sensor Data Chart" style="width: 100%; height: auto;" />
+    </div>
+    <br />
+    <br />
+    <div class="logo">
+      <h1>Prayogik Solutions</h1>
+      <img src="data:image/png;base64,${config.PLogo64}" alt="PrayogikFullLogo" width="300px" height="150px" />
+    </div>
+  </div>
+</body>
+</html>
+`;
+
+  // Return both htmlContent and user details (userID)
+  return { htmlContent, userID };
+};
+
+
+//http://localhost:3000/api/admin/observePDF?id=f9rHIhOQDnfdAljB7jIlF8UjwsW2&sensorType=ActivitySensor&startTimeStamp=1704067200000&endTimeStamp=1725892805000
+const observePDF = async (req, res) => {
+  try {
+    const { id, sensorType, startTimeStamp, endTimeStamp } = req.query;
+
+    if (!id || !startTimeStamp || !endTimeStamp || !sensorType) {
+      return res.status(400).send('Missing required parameters');
+    }
+
+    const htmlContent = await generateHTMLContent(id, sensorType, startTimeStamp, endTimeStamp);
+
+    res.send(htmlContent["htmlContent"]); // Render HTML content in the browser
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error generating HTML page');
+  }
+};
 
 const sendEmailPDF = async (req, res) => {
   try {
@@ -535,104 +707,8 @@ const sendEmailPDF = async (req, res) => {
       return res.status(400).json({ message: 'Missing required parameters' });
     }
 
-    const startDate = new Date(Number(startTimeStamp));
-    const endDate = new Date(Number(endTimeStamp));
+    const { htmlContent, userID } = await generateHTMLContent(id, sensorType, startTimeStamp, endTimeStamp);
 
-    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-      return res.status(400).json({ message: 'Invalid timestamps provided' });
-    }
-
-    const graphData = await fetchGraphData(id, sensorType, startTimeStamp, endTimeStamp);
-    if (!graphData || graphData.length === 0) {
-      return res.status(404).json({ message: 'No data found for the given parameters' });
-    }
-
-    const DeviceData = await Device.findOne({ currentUserId: id });
-    if (!DeviceData) {
-      return res.status(404).json({ message: 'Device data not found' });
-    }
-
-    const userID = await InitialUser.findOne({ _id: DeviceData.currentUserId });
-    if (!userID) {
-      return res.status(404).json({ message: 'User data not found' });
-    }
-
-    const adminID = await InitialUser.findOne({ _id: DeviceData.currentAdminId });
-    if (!adminID) {
-      return res.status(404).json({ message: 'Admin data not found' });
-    }
-
-    const labels = graphData.map(data => new Date(data.timestamp).toLocaleTimeString());
-    const values = graphData.map(data => data.value);
-    const chartUrl = `https://quickchart.io/chart?c=${encodeURIComponent(JSON.stringify({
-      type: 'line',
-      data: {
-        labels: labels,
-        datasets: [{
-          label: 'Sensor Data',
-          data: values,
-          backgroundColor: 'rgba(124, 214, 171, 0.2)',
-          borderColor: '#7CD6AB',
-          borderWidth: 2,
-          pointRadius: 0,
-          pointHoverRadius: 0
-        }]
-      },
-    }))}`;
-
-    const fetchChartImage = (url) => {
-      return new Promise((resolve, reject) => {
-        https.get(url, (response) => {
-          let data = [];
-          response.on('data', (chunk) => data.push(chunk));
-          response.on('end', () => {
-            const imageData = Buffer.concat(data).toString('base64');
-            resolve(`data:image/png;base64,${imageData}`);
-          });
-        }).on('error', (err) => reject(err));
-      });
-    };
-
-    const chartImage = await fetchChartImage(chartUrl);
-
-    const htmlContent = `
-      <html>
-        <head>
-          <style>
-            body { font-family: Arial, sans-serif; }
-            h1 { text-align: center; }
-            .container { width: 100%; padding: 20px; }
-            .details { margin-bottom: 20px; }
-            .details p { margin: 5px 0; }
-            .chart { text-align: center; }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <h1>Graph Data Report</h1>
-            <div class="details">
-              <p><strong>Name:</strong> ${userID.name}</p>
-              <p><strong>Email:</strong> ${userID.email}</p>
-              <p><strong>Phone:</strong> ${userID.phone}</p>
-              <p><strong>Sensor:</strong> ${sensorType}</p>
-              <p><strong>Start:</strong> ${startDate.toLocaleString()}</p>
-              <p><strong>End:</strong> ${endDate.toLocaleString()}</p>
-            </div>
-            <div class="chart">
-              <img src="${chartImage}" alt="Sensor Data Chart"/>
-            </div>
-          </div>
-        </body>
-      </html>
-    `;
-
-    // Launch Puppeteer using chrome-aws-lambda
-    // const browser = await puppeteer.launch({
-    //   args: [...chromium.args, '--no-sandbox', '--disable-setuid-sandbox'],
-    //   executablePath: await chromium.executablePath,
-    //   headless: chromium.headless,
-    //   ignoreHTTPSErrors: true,
-    // });
     const browser = await puppeteer.launch(
       production ? {
         args: chrome.args,
@@ -654,7 +730,7 @@ const sendEmailPDF = async (req, res) => {
     const mailOptions = {
       from: process.env.NODE_MAILER_USEREMAIL,
       to: userID.email,
-      cc: 'pjtempid@gmail.com',
+      cc: "hastinapur6432@gmail.com",
       subject: 'Graph Data Report',
       text: `Hi ${userID.name},\n\nPlease find attached the Graph Data Report.\n\nBest regards,\nYour Company`,
       attachments: [
@@ -683,6 +759,8 @@ const sendEmailPDF = async (req, res) => {
 
 
 
+
+
 module.exports = {
-  addUserToAdmin, removeUserFromAdmin, getUnallocatedUsers, getAdminUsers, getUserDocById, getDeviceIds, getImageByToken, getDeviceData, getSensorDB, getLocation, getGraphData, sendEmailPDF
+  addUserToAdmin, removeUserFromAdmin, getUnallocatedUsers, getAdminUsers, getUserDocById, getDeviceIds, getImageByToken, getDeviceData, getSensorDB, getLocation, getGraphData, sendEmailPDF, observePDF
 };

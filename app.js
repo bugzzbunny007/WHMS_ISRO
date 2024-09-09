@@ -24,7 +24,8 @@ const environmentRoutes = require("./routes/environment");
 const UserRoutes = require("./routes/User");
 const alertRoutes = require("./routes/alerts");
 const SensorDB = require("./models/SensorDB")
-const sensorRoutes = require("./routes/sensor")
+const sensorRoutes = require("./routes/sensor");
+const { observePDF } = require("./controllers/admin");
 
 
 
@@ -41,6 +42,7 @@ app.use(cors({
 
 // Routes
 app.use("/api/auth", authRoutes);
+app.use("/observePDF", observePDF)
 app.use("/api/profile", profileRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/superadmin", superAdminRoutes);
