@@ -2,39 +2,60 @@ require("dotenv").config();
 
 const sensorContent = [
     "Your Heart Sensor is showing abnormal values.",
-    "Your Breath Rate Sensor is showing abnormal values.",
-    "Your Ventilation Sensor is showing abnormal values.",
-    "Your Tidal Volume Sensor is showing abnormal values.",
-    "Your Activity Sensor is showing abnormal values.",
-    "Your Cadence Sensor is showing abnormal values.",
+
     "Your Temperature Sensor is showing abnormal values.",
+
+    "Your Blood Pressure Sensor is showing abnormal values.",
+
+    "Your Activity Sensor is showing abnormal values.",
+    "Your Breath Rate Sensor is showing abnormal values.",
+
+    "Your Cadence Sensor is showing abnormal values.",
+
     "Your Oxygen Saturation Sensor is showing abnormal values.",
-    "Your Blood Pressure Sensor is showing abnormal values."
+
+    "Your Tidal Volume Sensor is showing abnormal values.",
+    "Your Ventilation Sensor is showing abnormal values.",
 ]
 
 const sensorUnits = [
     "bpm",
-    "resp/min",
-    "L/min",
-    "L",
-    "g",
-    "step/min",
     "°C",
-    "%",
     "mmHg",
+
+    "g",
+
+    "resp/min",
+
+    "step/min",
+    "%",
+    "L",
+    "L/min",
+
+
+
+
 ];
+
 
 
 const sensorContentAdmin = [
     "Your Heart Sensor is showing abnormal values.",
-    "Your Breath Rate Sensor is showing abnormal values.",
-    "Your Ventilation Sensor is showing abnormal values.",
-    "Your Tidal Volume Sensor is showing abnormal values.",
-    "Your Activity Sensor is showing abnormal values.",
-    "Your Cadence Sensor is showing abnormal values.",
+
     "Your Temperature Sensor is showing abnormal values.",
+
+    "Your Blood Pressure Sensor is showing abnormal values.",
+
+    "Your Activity Sensor is showing abnormal values.",
+
+    "Your Breath Rate Sensor is showing abnormal values.",
+    "Your Cadence Sensor is showing abnormal values.",
+
     "Your Oxygen Saturation Sensor is showing abnormal values.",
-    "Your Blood Pressure Sensor is showing abnormal values."
+
+    "Your Tidal Volume Sensor is showing abnormal values.",
+    "Your Ventilation Sensor is showing abnormal values.",
+
 ]
 const formatValue = (value) => {
 

@@ -26,7 +26,7 @@ exports.sendAlert = async (req, res) => {
         // Add 5 minutes to currentTimestamp
 
 
-        const sensorTimeStamps = ["heartSensorAlertTimeStamp", "BreathRateSensorAlertTimeStamp", "VentilatonSensorAlertTimeStamp", "TidalVolumeSensorAlertTimeStamp", "ActivitySensorAlertTimeStamp", "CadenceSensorAlertTimeStamp", "TemperatureSensorAlertTimeStamp", "OxygenSaturationSensorAlertTimeStamp", "BloodPressureSensorAlertTimeStamp"]
+        const sensorTimeStamps = ["heartSensorAlertTimeStamp", "TemperatureSensorAlertTimeStamp", "BloodPressureSensorAlertTimeStamp", "ActivitySensorAlertTimeStamp", "BreathRateSensorAlertTimeStamp", "CadenceSensorAlertTimeStamp", "OxygenSaturationSensorAlertTimeStamp", "TidalVolumeSensorAlertTimeStamp", "VentilatonSensorAlertTimeStamp"]
         const sensorThresholds = ["60", "60", "60", "60", "60", "60", "60", "60", "60"]
 
         // Iterate through sensors and update alertID based on timestamp
