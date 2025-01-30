@@ -51,6 +51,9 @@ app.use("/api/user", UserRoutes);
 app.use("/api/alerts", alertRoutes);
 app.use("/api/sensor", sensorRoutes);
 
+
+
+
 // Get current date and time
 const currentDate = new Date();
 const formattedDate = currentDate.toISOString().split('T')[0];
@@ -67,6 +70,10 @@ const server = app.listen(port, () => {
   console.log(`App is running at http://localhost:${port}`);
 });
 
+
+const SocketController = require('./controllers/socket.controller');
+const socketController = new SocketController(server);
+socketController.initialize();
 
 // const io = require('socket.io')(server, {
 //   cors: {
