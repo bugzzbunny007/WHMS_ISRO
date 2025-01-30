@@ -1,7 +1,11 @@
 const socketConfig = {
-    cors: {
-      origin: '*', // Allow all origins (for development only)
-    },
+    // Allow all origins (for development only)
+      cors: {
+        origin: "https://whms.in",
+        methods: ["GET", "POST"],
+        credentials: true
+      },
+   
     port: process.env.PORT || 3000,
     events: {
       CONNECTION: 'connection',
