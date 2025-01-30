@@ -1,20 +1,16 @@
 const socketConfig = {
-    // Allow all origins (for development only)
-      cors: {
-        origin: ["https://whms.in", "http://localhost:3000"],
-        methods: ["GET", "POST"],
-        credentials: true
-      },
-      transports: ['websocket'],
-      path: '/socket.io/',
-   
-    port: process.env.PORT || 3000,
-    events: {
-      CONNECTION: 'connection',
-      DISCONNECT: 'disconnect',
-      SENSOR_DATA: 'sensor-data',
-      NEW_SENSOR_DATA: 'new-sensor-data'
-    }
-  };
-  
-  module.exports = socketConfig;
+  cors: {
+    origin: ["https://www.whms.in", "http://localhost:3000"],
+    methods: ["GET", "POST"],
+    credentials: true,
+    allowedHeaders: ["*"]
+  },
+  transports: ['websocket', 'polling'],  // Allow both transports
+  path: '/socket.io',  // Remove trailing slash
+  pingTimeout: 60000,
+  pingInterval: 25000,
+  upgradeTimeout: 30000,
+  maxHttpBufferSize: 1e8
+};
+
+module.exports = socketConfig;
