@@ -3,8 +3,10 @@ const socketConfig = require('../config/socket.config');
 
 class SocketController {
   constructor(httpServer) {
+
     this.io = new Server(httpServer, socketConfig);
     this.connectedUsers = new Map(); // Store active connections
+    
   }
 
   initialize() {
