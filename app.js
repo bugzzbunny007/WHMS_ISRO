@@ -60,7 +60,7 @@ const formattedDate = currentDate.toISOString().split('T')[0];
 const formattedTime = currentDate.toTimeString().split(' ')[0];
 
 app.get("/", (req, res) => {
-  res.send(`API is running | Branch S5 | Dated - ${formattedDate} | Time - ${formattedTime}`);
+  res.send(`API is running | Branch S7 | Dated - ${formattedDate} | Time - ${formattedTime}`);
 })
 
 // PORT
