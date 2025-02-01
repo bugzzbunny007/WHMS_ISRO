@@ -24,9 +24,9 @@ const environmentRoutes = require("./routes/environment");
 const UserRoutes = require("./routes/User");
 const alertRoutes = require("./routes/alerts");
 const SensorDB = require("./models/SensorDB")
-const sensorRoutes = require("./routes/sensor");
+const sensorRoutes = require("./routes/sensor.routes");
 const { observePDF } = require("./controllers/admin");
-
+const AblyController = require('./controllers/ably.controller');
 
 
 // Middlewares
@@ -52,7 +52,11 @@ app.use("/api/alerts", alertRoutes);
 app.use("/api/sensor", sensorRoutes);
 
 
-
+const ablyController = new AblyController();
+process.on('SIGTERM', () => {
+  ablyController.closeConnection();
+  process.exit(0);
+});
 
 // Get current date and time
 const currentDate = new Date();
