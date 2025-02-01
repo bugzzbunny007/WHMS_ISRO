@@ -49,14 +49,14 @@ app.use("/api/superadmin", superAdminRoutes);
 app.use("/api/environment", environmentRoutes);
 app.use("/api/user", UserRoutes);
 app.use("/api/alerts", alertRoutes);
-app.use("/api/sensor", sensorRoutes);
+// app.use("/api/sensor", sensorRoutes);
 
 
-const ablyController = new AblyController();
-process.on('SIGTERM', () => {
-  ablyController.closeConnection();
-  process.exit(0);
-});
+// const ablyController = new AblyController();
+// process.on('SIGTERM', () => {
+//   ablyController.closeConnection();
+//   process.exit(0);
+// });
 
 // Get current date and time
 const currentDate = new Date();
