@@ -25,9 +25,7 @@ const UserRoutes = require("./routes/User");
 const alertRoutes = require("./routes/alerts");
 const SensorDB = require("./models/SensorDB")
 const sensorRoutes = require("./routes/sensor.routes");
-const sensorRoutes = require("./routes/sensor.routes");
 const { observePDF } = require("./controllers/admin");
-const AblyController = require('./controllers/ably.controller');
 const AblyController = require('./controllers/ably.controller');
 
 
